@@ -35,6 +35,20 @@
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #DC2626; border-radius: 10px; }
+
+        /* Print Style for Report Modal */
+        @media print {
+            body * { visibility: hidden; }
+            #sr_print_area, #sr_print_area * { visibility: visible; }
+            #sr_print_area { position: absolute; left: 0; top: 0; width: 100%; border: none !important; }
+            #sr_print_header { display: block !important; margin-bottom: 20px; }
+            .sticky { position: static !important; }
+            #studentReportTable { width: 100%; border-collapse: collapse; }
+            #studentReportTable th, #studentReportTable td { border: 1px solid #333 !important; padding: 8px !important; white-space: normal !important; color: #000; }
+            #studentReportTable th { background-color: #f3f4f6 !important; -webkit-print-color-adjust: exact; }
+            #studentReportModal { position: static; background: none; }
+            #studentReportModalBox { box-shadow: none; max-width: none; width: 100%; margin: 0; padding: 0; }
+        }
     </style>
 </head>
 <body class="text-rsct-dark h-screen flex overflow-hidden">
@@ -55,6 +69,77 @@
             <div class="flex gap-3">
                 <button onclick="closeConfirmModal()" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 rounded-lg transition shadow-sm">ยกเลิก</button>
                 <button onclick="executeConfirm()" class="flex-1 bg-rsct-red hover:bg-red-700 text-white font-bold py-2 rounded-lg transition shadow-sm">ยืนยัน</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Report Modal (เพิ่มใหม่) -->
+    <div id="studentReportModal" class="fixed inset-0 bg-black bg-opacity-60 z-[110] flex items-center justify-center hidden">
+        <div class="bg-white p-6 rounded-xl shadow-2xl w-full max-w-5xl mx-4 max-h-[90vh] flex flex-col transform transition-all scale-95 opacity-0" id="studentReportModalBox">
+            <!-- Header -->
+            <div class="flex justify-between items-center mb-4 border-b pb-2 flex-shrink-0">
+                <h3 class="text-xl font-bold text-gray-800"><i class="fas fa-file-alt text-purple-600 mr-2"></i> รายงานข้อมูลนักเรียน</h3>
+                <button onclick="closeStudentReportModal()" class="text-gray-500 hover:text-red-500 text-3xl leading-none">&times;</button>
+            </div>
+
+            <!-- Filters -->
+            <div class="bg-gray-50 p-4 rounded-lg border mb-4 grid grid-cols-1 md:grid-cols-4 gap-4 flex-shrink-0">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">ประเภทรายงาน</label>
+                    <select id="sr_report_type" class="w-full border rounded p-2 focus:ring-1 focus:ring-purple-500" onchange="handleStudentReportTypeChange()">
+                        <option value="">-- เลือกประเภท --</option>
+                        <option value="room">รายงานตามชั้น/ห้อง</option>
+                        <option value="sport">รายงานตามประเภทกีฬา</option>
+                    </select>
+                </div>
+                
+                <div id="sr_room_filter_container" class="hidden md:col-span-2">
+                    <label class="block text-sm font-bold text-gray-700 mb-1">เลือกชั้น/ห้อง</label>
+                    <select id="sr_room_select" class="w-full border rounded p-2 focus:ring-1 focus:ring-purple-500">
+                        <option value="">-- ทุกชั้น/ห้อง --</option>
+                    </select>
+                </div>
+
+                <div id="sr_sport_filter_container" class="hidden md:col-span-2">
+                    <label class="block text-sm font-bold text-gray-700 mb-1">เลือกชนิดกีฬา</label>
+                    <select id="sr_sport_select" class="w-full border rounded p-2 focus:ring-1 focus:ring-purple-500">
+                        <option value="">-- ทุกชนิดกีฬา --</option>
+                    </select>
+                </div>
+
+                <div class="flex items-end">
+                    <button onclick="generateStudentReport()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded shadow transition active:scale-95"><i class="fas fa-search mr-1"></i> ดึงข้อมูล</button>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex justify-end gap-2 mb-2 flex-shrink-0">
+                <button onclick="printStudentReport()" id="btn_sr_print" class="hidden bg-gray-800 hover:bg-black text-white px-4 py-2 rounded text-sm shadow font-bold transition active:scale-95"><i class="fas fa-print mr-1"></i> พิมพ์ PDF</button>
+                <button onclick="exportStudentReportExcel()" id="btn_sr_excel" class="hidden bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm shadow font-bold transition active:scale-95"><i class="fas fa-file-excel mr-1"></i> ส่งออก Excel</button>
+            </div>
+
+            <!-- Table Area -->
+            <div class="flex-1 overflow-auto border border-gray-300 rounded-lg" id="sr_print_area">
+                <!-- Title for printing (hidden in UI) -->
+                <div id="sr_print_header" class="hidden text-center mb-4 pt-4">
+                    <h2 class="text-2xl font-bold text-black" id="sr_print_title">รายงานข้อมูลนักเรียน โรงเรียน RSCT Sarnfan Care</h2>
+                    <p class="text-md text-gray-800 mt-1" id="sr_print_subtitle"></p>
+                </div>
+                <table class="w-full text-sm text-left whitespace-nowrap" id="studentReportTable">
+                    <thead class="bg-gray-200 text-gray-800 sticky top-0 shadow-sm z-10">
+                        <tr>
+                            <th class="p-3 border-b border-r border-gray-300 w-16 text-center font-bold">ลำดับ</th>
+                            <th class="p-3 border-b border-r border-gray-300 w-32 text-center font-bold">เลขประจำตัว</th>
+                            <th class="p-3 border-b border-r border-gray-300 font-bold">ชื่อ-สกุล</th>
+                            <th class="p-3 border-b border-r border-gray-300 w-24 text-center font-bold">ชั้น</th>
+                            <th class="p-3 border-b border-r border-gray-300 w-24 text-center font-bold">ห้อง</th>
+                            <th class="p-3 border-b border-gray-300 text-center font-bold">ประเภทกีฬา</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentReportBody" class="bg-white">
+                        <tr><td colspan="6" class="p-8 text-center text-gray-500"><i class="fas fa-hand-pointer text-2xl mb-2 block"></i> กรุณาเลือกประเภทรายงานและกดปุ่ม "ดึงข้อมูล"</td></tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -236,167 +321,196 @@
                     </div>
                 </div>
 
-                <!-- 1. ตั้งค่าระบบ -->
-                <div id="page-settings" class="page-section">
-                    <div class="bg-white rounded-xl shadow p-6">
-                        <form id="settingsForm" onsubmit="prepareSettingsAndSave(event)">
-                            
-                            <!-- ตัวเลือกรายการฟอร์ม (Tabs) -->
-                            <div class="flex gap-2 mb-6 border-b pb-2 overflow-x-auto whitespace-nowrap custom-scrollbar">
-                                <button type="button" onclick="switchSettingTab('set-basic', this)" class="setting-tab-btn active bg-rsct-red text-white px-4 py-2 rounded-t-lg font-bold text-sm transition shadow-sm"><i class="fas fa-info-circle mr-1"></i> ข้อมูลพื้นฐาน</button>
-                                <button type="button" onclick="switchSettingTab('set-period', this)" class="setting-tab-btn bg-gray-100 text-gray-700 hover:bg-gray-200 px-4 py-2 rounded-t-lg font-bold text-sm transition shadow-sm"><i class="far fa-clock mr-1"></i> คาบสอน</button>
-                                <button type="button" onclick="switchSettingTab('set-behavior', this)" class="setting-tab-btn bg-gray-100 text-gray-700 hover:bg-gray-200 px-4 py-2 rounded-t-lg font-bold text-sm transition shadow-sm"><i class="fas fa-star-half-alt mr-1"></i> พฤติกรรม</button>
-                                <button type="button" onclick="switchSettingTab('set-duty', this)" class="setting-tab-btn bg-gray-100 text-gray-700 hover:bg-gray-200 px-4 py-2 rounded-t-lg font-bold text-sm transition shadow-sm"><i class="fas fa-broom mr-1"></i> เวรนักเรียน</button>
-                                <button type="button" onclick="switchSettingTab('set-department', this)" class="setting-tab-btn bg-gray-100 text-gray-700 hover:bg-gray-200 px-4 py-2 rounded-t-lg font-bold text-sm transition shadow-sm"><i class="fas fa-users-cog mr-1"></i> กลุ่มสาระ/งาน</button>
-                                <button type="button" onclick="switchSettingTab('set-permission', this)" class="setting-tab-btn bg-gray-100 text-gray-700 hover:bg-gray-200 px-4 py-2 rounded-t-lg font-bold text-sm transition shadow-sm"><i class="fas fa-user-shield mr-1"></i> สิทธิการใช้งาน</button>
-                            </div>
+<!-- 1. ตั้งค่าระบบ -->
+<div id="page-settings" class="page-section">
+    <div class="bg-white rounded-xl shadow p-6">
+        <form id="settingsForm" onsubmit="prepareSettingsAndSave(event)">
+            
+            <!-- ตัวเลือกรายการฟอร์ม (Tabs) -->
+            <div class="flex gap-2 mb-6 border-b pb-2 overflow-x-auto whitespace-nowrap custom-scrollbar">
+                <button type="button" onclick="switchSettingTab('set-basic', this)" class="setting-tab-btn active bg-rsct-red text-white px-4 py-2 rounded-t-lg font-bold text-sm transition shadow-sm"><i class="fas fa-info-circle mr-1"></i> ข้อมูลพื้นฐาน</button>
+                <button type="button" onclick="switchSettingTab('set-period', this)" class="setting-tab-btn bg-gray-100 text-gray-700 hover:bg-gray-200 px-4 py-2 rounded-t-lg font-bold text-sm transition shadow-sm"><i class="far fa-clock mr-1"></i> คาบสอน</button>
+                <button type="button" onclick="switchSettingTab('set-behavior', this)" class="setting-tab-btn bg-gray-100 text-gray-700 hover:bg-gray-200 px-4 py-2 rounded-t-lg font-bold text-sm transition shadow-sm"><i class="fas fa-star-half-alt mr-1"></i> พฤติกรรม</button>
+                <button type="button" onclick="switchSettingTab('set-duty', this)" class="setting-tab-btn bg-gray-100 text-gray-700 hover:bg-gray-200 px-4 py-2 rounded-t-lg font-bold text-sm transition shadow-sm"><i class="fas fa-broom mr-1"></i> เวรนักเรียน</button>
+                <button type="button" onclick="switchSettingTab('set-department', this)" class="setting-tab-btn bg-gray-100 text-gray-700 hover:bg-gray-200 px-4 py-2 rounded-t-lg font-bold text-sm transition shadow-sm"><i class="fas fa-users-cog mr-1"></i> กลุ่มสาระ/งาน</button>
+                
+                <!-- เพิ่มปุ่มแท็บ แผนการเรียน -->
+                <button type="button" onclick="switchSettingTab('set-study-plan', this)" class="setting-tab-btn bg-gray-100 text-gray-700 hover:bg-gray-200 px-4 py-2 rounded-t-lg font-bold text-sm transition shadow-sm"><i class="fas fa-book mr-1"></i> แผนการเรียน</button>
+                
+                <button type="button" onclick="switchSettingTab('set-permission', this)" class="setting-tab-btn bg-gray-100 text-gray-700 hover:bg-gray-200 px-4 py-2 rounded-t-lg font-bold text-sm transition shadow-sm"><i class="fas fa-user-shield mr-1"></i> สิทธิการใช้งาน</button>
+            </div>
 
-                            <!-- แท็บ: ข้อมูลพื้นฐาน -->
-                            <div id="set-basic" class="setting-tab-content block mb-6">
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div>
-                                        <label class="block text-sm font-medium mb-1">ชื่อโรงเรียน</label>
-                                        <input type="text" name="schoolName" class="w-full border rounded p-2 focus:border-rsct-red focus:ring-1 focus:ring-rsct-red" value="RSCT Sarnfan Care">
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium mb-1">อัปโหลดโลโก้โรงเรียน (รูปภาพ)</label>
-                                        <input type="file" id="logoUpload" accept="image/*" class="w-full border rounded p-1 text-sm focus:border-rsct-red" onchange="handleLogoUpload(event)">
-                                        <input type="hidden" name="logoBase64" id="logoBase64">
-                                        <img id="logoPreview" class="mt-2 h-16 object-contain hidden border rounded p-1">
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium mb-1">ระดับชั้น (คั่นด้วยคอมม่า)</label>
-                                        <input type="text" name="levels" class="w-full border rounded p-2 focus:border-rsct-red" value="ม.1,ม.2,ม.3,ม.4,ม.5,ม.6">
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium mb-1">จำนวนห้องสูงสุดต่อระดับชั้น</label>
-                                        <input type="number" name="rooms" class="w-full border rounded p-2 focus:border-rsct-red" value="8">
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium mb-1">ประเภทการลา (คั่นด้วยคอมม่า)</label>
-                                        <input type="text" name="leaveTypes" class="w-full border rounded p-2 focus:border-rsct-red" value="ลาป่วย,ลากิจ,ลากลับบ้าน,แข่งขันกีฬา">
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium mb-1">ชนิดกีฬา (คั่นด้วยคอมม่า)</label>
-                                        <input type="text" name="sports" class="w-full border rounded p-2 focus:border-rsct-red" value="ฟุตซอล,ฟุตบอล,วอลเลย์บอล,ตะกร้อ,มวย">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- แท็บ: คาบสอน -->
-                            <div id="set-period" class="setting-tab-content hidden mb-6">
-                                <div class="flex justify-between items-center mb-4 border-b pb-2">
-                                    <h3 class="font-bold text-rsct-dark text-lg">กำหนดคาบสอนและเวลา</h3>
-                                    <button type="button" onclick="addPeriodRow()" class="bg-gray-800 hover:bg-black text-white px-3 py-1.5 rounded text-sm shadow-sm"><i class="fas fa-plus"></i> เพิ่มคาบเรียน</button>
-                                </div>
-                                <input type="hidden" name="periodsData" id="periodsData">
-                                <div class="overflow-x-auto border rounded-lg">
-                                    <table class="w-full text-sm text-left" id="periodTable">
-                                        <thead class="bg-gray-100 text-gray-700">
-                                            <tr><th class="p-3 border-b">คาบที่</th><th class="p-3 border-b">เวลาเริ่ม</th><th class="p-3 border-b">เวลาสิ้นสุด</th><th class="p-3 border-b text-center w-20">จัดการ</th></tr>
-                                        </thead>
-                                        <tbody>
-                                            <!-- เติมข้อมูลเริ่มต้นจาก JS -->
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-
-                            <!-- แท็บ: พฤติกรรม -->
-                            <div id="set-behavior" class="setting-tab-content hidden mb-6">
-                                <div class="flex flex-col md:flex-row justify-between items-center mb-4 border-b pb-2 gap-2">
-                                    <h3 class="font-bold text-rsct-dark text-lg">รายการพฤติกรรมและคะแนน</h3>
-                                    <div class="flex gap-2">
-                                        <input type="file" id="csvUpload" accept=".csv" class="hidden" onchange="handleCSV(event)">
-                                        <button type="button" onclick="document.getElementById('csvUpload').click()" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded text-sm shadow-sm"><i class="fas fa-file-csv"></i> นำเข้า CSV</button>
-                                        <button type="button" onclick="addBehaviorRow()" class="bg-gray-800 hover:bg-black text-white px-3 py-1.5 rounded text-sm shadow-sm"><i class="fas fa-plus"></i> เพิ่มรายการ</button>
-                                    </div>
-                                </div>
-                                <input type="hidden" name="behaviorsData" id="behaviorsData">
-                                <div class="max-h-96 overflow-y-auto border rounded-lg relative">
-                                    <table class="w-full text-sm text-left" id="behaviorTable">
-                                        <thead class="bg-gray-100 text-gray-700 sticky top-0 shadow-sm">
-                                            <tr><th class="p-3 border-b">รายการพฤติกรรม</th><th class="p-3 border-b w-32">คะแนน (+/-)</th><th class="p-3 border-b text-center w-20">จัดการ</th></tr>
-                                        </thead>
-                                        <tbody>
-                                            <!-- เติมข้อมูลเริ่มต้นจาก JS -->
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-
-                            <!-- แท็บ: เวรนักเรียน -->
-                            <div id="set-duty" class="setting-tab-content hidden mb-6">
-                                <div class="flex justify-between items-center mb-4 border-b pb-2">
-                                    <h3 class="font-bold text-rsct-dark text-lg">กำหนดรายการเวรนักเรียน</h3>
-                                    <button type="button" onclick="addDutyRow()" class="bg-gray-800 hover:bg-black text-white px-3 py-1.5 rounded text-sm shadow-sm"><i class="fas fa-plus"></i> เพิ่มรายการเวร</button>
-                                </div>
-                                <input type="hidden" name="dutiesData" id="dutiesData">
-                                <div class="overflow-x-auto border rounded-lg">
-                                    <table class="w-full text-sm text-left" id="dutyTable">
-                                        <thead class="bg-gray-100 text-gray-700">
-                                            <tr><th class="p-3 border-b">รายการเวร</th><th class="p-3 border-b w-48">วัน</th><th class="p-3 border-b w-40">เวลา</th><th class="p-3 border-b text-center w-20">จัดการ</th></tr>
-                                        </thead>
-                                        <tbody>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-
-                            <!-- แท็บ: กลุ่มสาระและกลุ่มงาน -->
-                            <div id="set-department" class="setting-tab-content hidden mb-6">
-                                <div class="flex justify-between items-center mb-4 border-b pb-2">
-                                    <h3 class="font-bold text-rsct-dark text-lg">กำหนดกลุ่มสาระการเรียนรู้และกลุ่มงาน</h3>
-                                    <button type="button" onclick="addDepartmentRow()" class="bg-gray-800 hover:bg-black text-white px-3 py-1.5 rounded text-sm shadow-sm"><i class="fas fa-plus"></i> เพิ่มรายการ</button>
-                                </div>
-                                <input type="hidden" name="departmentsData" id="departmentsData">
-                                <div class="overflow-x-auto border rounded-lg">
-                                    <table class="w-full text-sm text-left" id="departmentTable">
-                                        <thead class="bg-gray-100 text-gray-700">
-                                            <tr>
-                                                <th class="p-3 border-b w-16 text-center">ลำดับ</th>
-                                                <th class="p-3 border-b">ชื่อกลุ่มสาระ/กลุ่มงาน</th>
-                                                <th class="p-3 border-b text-center w-20">จัดการ</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <!-- เติมข้อมูลเริ่มต้นจาก JS -->
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-
-                            <!-- แท็บ: สิทธิการใช้งาน -->
-                            <div id="set-permission" class="setting-tab-content hidden mb-6">
-                                <h3 class="font-bold text-rsct-dark text-lg mb-4 border-b pb-2">กำหนดสิทธิการใช้งานเมนู</h3>
-                                <input type="hidden" name="permissionsData" id="permissionsData">
-                                <div class="overflow-x-auto border rounded-lg">
-                                    <table class="w-full text-sm text-center" id="permTable">
-                                        <thead class="bg-gray-100 text-gray-700">
-                                            <tr>
-                                                <th class="p-3 border-b border-r text-left">รายการเมนู</th>
-                                                <th class="p-3 border-b">ผู้ดูแลระบบ</th>
-                                                <th class="p-3 border-b">ครูหอพัก</th>
-                                                <th class="p-3 border-b">ครูวิชาการ</th>
-                                                <th class="p-3 border-b">แม่ครัว</th>
-                                                <th class="p-3 border-b">ผู้บริหาร</th>
-                                                <th class="p-3 border-b">สนับสนุน</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <!-- ข้อมูลตารางสิทธิ์จะถูกสร้างโดย JS ตอนโหลด -->
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-
-                            <!-- ปุ่มบันทึก จะอยู่ล่างสุดเสมอ -->
-                            <div class="border-t pt-4 mt-4">
-                                <button type="submit" class="bg-rsct-red text-white px-8 py-3 rounded-lg shadow-lg hover:bg-red-700 font-bold w-full md:w-auto transition-transform active:scale-95"><i class="fas fa-save mr-2"></i> บันทึกการตั้งค่าทั้งหมดลงฐานข้อมูล</button>
-                            </div>
-                        </form>
+            <!-- แท็บ: ข้อมูลพื้นฐาน -->
+            <div id="set-basic" class="setting-tab-content block mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">ชื่อโรงเรียน</label>
+                        <input type="text" name="schoolName" class="w-full border rounded p-2 focus:border-rsct-red focus:ring-1 focus:ring-rsct-red" value="RSCT Sarnfan Care">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">อัปโหลดโลโก้โรงเรียน (รูปภาพ)</label>
+                        <input type="file" id="logoUpload" accept="image/*" class="w-full border rounded p-1 text-sm focus:border-rsct-red" onchange="handleLogoUpload(event)">
+                        <input type="hidden" name="logoBase64" id="logoBase64">
+                        <img id="logoPreview" class="mt-2 h-16 object-contain hidden border rounded p-1">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">ระดับชั้น (คั่นด้วยคอมม่า)</label>
+                        <input type="text" name="levels" class="w-full border rounded p-2 focus:border-rsct-red" value="ม.1,ม.2,ม.3,ม.4,ม.5,ม.6">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">จำนวนห้องสูงสุดต่อระดับชั้น</label>
+                        <input type="number" name="rooms" class="w-full border rounded p-2 focus:border-rsct-red" value="8">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">ประเภทการลา (คั่นด้วยคอมม่า)</label>
+                        <input type="text" name="leaveTypes" class="w-full border rounded p-2 focus:border-rsct-red" value="ลาป่วย,ลากิจ,ลากลับบ้าน,แข่งขันกีฬา">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">ชนิดกีฬา (คั่นด้วยคอมม่า)</label>
+                        <input type="text" name="sports" class="w-full border rounded p-2 focus:border-rsct-red" value="ฟุตซอล,ฟุตบอล,วอลเลย์บอล,ตะกร้อ,มวย">
                     </div>
                 </div>
+            </div>
+
+            <!-- แท็บ: คาบสอน -->
+            <div id="set-period" class="setting-tab-content hidden mb-6">
+                <div class="flex justify-between items-center mb-4 border-b pb-2">
+                    <h3 class="font-bold text-rsct-dark text-lg">กำหนดคาบสอนและเวลา</h3>
+                    <button type="button" onclick="addPeriodRow()" class="bg-gray-800 hover:bg-black text-white px-3 py-1.5 rounded text-sm shadow-sm"><i class="fas fa-plus"></i> เพิ่มคาบเรียน</button>
+                </div>
+                <input type="hidden" name="periodsData" id="periodsData">
+                <div class="overflow-x-auto border rounded-lg">
+                    <table class="w-full text-sm text-left" id="periodTable">
+                        <thead class="bg-gray-100 text-gray-700">
+                            <tr><th class="p-3 border-b">คาบที่</th><th class="p-3 border-b">เวลาเริ่ม</th><th class="p-3 border-b">เวลาสิ้นสุด</th><th class="p-3 border-b text-center w-20">จัดการ</th></tr>
+                        </thead>
+                        <tbody>
+                            <!-- เติมข้อมูลเริ่มต้นจาก JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- แท็บ: พฤติกรรม -->
+            <div id="set-behavior" class="setting-tab-content hidden mb-6">
+                <div class="flex flex-col md:flex-row justify-between items-center mb-4 border-b pb-2 gap-2">
+                    <h3 class="font-bold text-rsct-dark text-lg">รายการพฤติกรรมและคะแนน</h3>
+                    <div class="flex gap-2">
+                        <input type="file" id="csvUpload" accept=".csv" class="hidden" onchange="handleCSV(event)">
+                        <button type="button" onclick="document.getElementById('csvUpload').click()" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded text-sm shadow-sm"><i class="fas fa-file-csv"></i> นำเข้า CSV</button>
+                        <button type="button" onclick="addBehaviorRow()" class="bg-gray-800 hover:bg-black text-white px-3 py-1.5 rounded text-sm shadow-sm"><i class="fas fa-plus"></i> เพิ่มรายการ</button>
+                    </div>
+                </div>
+                <input type="hidden" name="behaviorsData" id="behaviorsData">
+                <div class="max-h-96 overflow-y-auto border rounded-lg relative">
+                    <table class="w-full text-sm text-left" id="behaviorTable">
+                        <thead class="bg-gray-100 text-gray-700 sticky top-0 shadow-sm">
+                            <tr><th class="p-3 border-b">รายการพฤติกรรม</th><th class="p-3 border-b w-32">คะแนน (+/-)</th><th class="p-3 border-b text-center w-20">จัดการ</th></tr>
+                        </thead>
+                        <tbody>
+                            <!-- เติมข้อมูลเริ่มต้นจาก JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- แท็บ: เวรนักเรียน -->
+            <div id="set-duty" class="setting-tab-content hidden mb-6">
+                <div class="flex justify-between items-center mb-4 border-b pb-2">
+                    <h3 class="font-bold text-rsct-dark text-lg">กำหนดรายการเวรนักเรียน</h3>
+                    <button type="button" onclick="addDutyRow()" class="bg-gray-800 hover:bg-black text-white px-3 py-1.5 rounded text-sm shadow-sm"><i class="fas fa-plus"></i> เพิ่มรายการเวร</button>
+                </div>
+                <input type="hidden" name="dutiesData" id="dutiesData">
+                <div class="overflow-x-auto border rounded-lg">
+                    <table class="w-full text-sm text-left" id="dutyTable">
+                        <thead class="bg-gray-100 text-gray-700">
+                            <tr><th class="p-3 border-b">รายการเวร</th><th class="p-3 border-b w-48">วัน</th><th class="p-3 border-b w-40">เวลา</th><th class="p-3 border-b text-center w-20">จัดการ</th></tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- แท็บ: กลุ่มสาระและกลุ่มงาน -->
+            <div id="set-department" class="setting-tab-content hidden mb-6">
+                <div class="flex justify-between items-center mb-4 border-b pb-2">
+                    <h3 class="font-bold text-rsct-dark text-lg">กำหนดกลุ่มสาระการเรียนรู้และกลุ่มงาน</h3>
+                    <button type="button" onclick="addDepartmentRow()" class="bg-gray-800 hover:bg-black text-white px-3 py-1.5 rounded text-sm shadow-sm"><i class="fas fa-plus"></i> เพิ่มรายการ</button>
+                </div>
+                <input type="hidden" name="departmentsData" id="departmentsData">
+                <div class="overflow-x-auto border rounded-lg">
+                    <table class="w-full text-sm text-left" id="departmentTable">
+                        <thead class="bg-gray-100 text-gray-700">
+                            <tr>
+                                <th class="p-3 border-b w-16 text-center">ลำดับ</th>
+                                <th class="p-3 border-b">ชื่อกลุ่มสาระ/กลุ่มงาน</th>
+                                <th class="p-3 border-b text-center w-20">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- เติมข้อมูลเริ่มต้นจาก JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- แท็บใหม่: แผนการเรียน -->
+            <div id="set-study-plan" class="setting-tab-content hidden mb-6">
+                <div class="flex justify-between items-center mb-4 border-b pb-2">
+                    <h3 class="font-bold text-rsct-dark text-lg">กำหนดแผนการเรียน</h3>
+                    <!-- ฟังก์ชัน JS ที่เรียกใช้จะเป็น addStudyPlanRow() สำหรับสร้างแถวในตาราง -->
+                    <button type="button" onclick="addStudyPlanRow()" class="bg-gray-800 hover:bg-black text-white px-3 py-1.5 rounded text-sm shadow-sm"><i class="fas fa-plus"></i> เพิ่มรายการ</button>
+                </div>
+                <!-- ตัวแปร hidden สำหรับเก็บข้อมูลตอน submit -->
+                <input type="hidden" name="studyPlansData" id="studyPlansData">
+                <div class="overflow-x-auto border rounded-lg">
+                    <table class="w-full text-sm text-left" id="studyPlanTable">
+                        <thead class="bg-gray-100 text-gray-700">
+                            <tr>
+                                <th class="p-3 border-b w-16 text-center">ลำดับ</th>
+                                <th class="p-3 border-b">แผนการเรียน</th>
+                                <th class="p-3 border-b text-center w-20">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- เติมข้อมูลเริ่มต้นจาก JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- แท็บ: สิทธิการใช้งาน -->
+            <div id="set-permission" class="setting-tab-content hidden mb-6">
+                <h3 class="font-bold text-rsct-dark text-lg mb-4 border-b pb-2">กำหนดสิทธิการใช้งานเมนู</h3>
+                <input type="hidden" name="permissionsData" id="permissionsData">
+                <div class="overflow-x-auto border rounded-lg">
+                    <table class="w-full text-sm text-center" id="permTable">
+                        <thead class="bg-gray-100 text-gray-700">
+                            <tr>
+                                <th class="p-3 border-b border-r text-left">รายการเมนู</th>
+                                <th class="p-3 border-b">ผู้ดูแลระบบ</th>
+                                <th class="p-3 border-b">ครูหอพัก</th>
+                                <th class="p-3 border-b">ครูวิชาการ</th>
+                                <th class="p-3 border-b">แม่ครัว</th>
+                                <th class="p-3 border-b">ผู้บริหาร</th>
+                                <th class="p-3 border-b">สนับสนุน</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- ข้อมูลตารางสิทธิ์จะถูกสร้างโดย JS ตอนโหลด -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ปุ่มบันทึก จะอยู่ล่างสุดเสมอ -->
+            <div class="border-t pt-4 mt-4">
+                <button type="submit" class="bg-rsct-red text-white px-8 py-3 rounded-lg shadow-lg hover:bg-red-700 font-bold w-full md:w-auto transition-transform active:scale-95"><i class="fas fa-save mr-2"></i> บันทึกการตั้งค่าทั้งหมดลงฐานข้อมูล</button>
+            </div>
+        </form>
+    </div>
+</div>
 
 <!-- 2. จัดการข้อมูลนักเรียน -->
 <div id="page-student" class="page-section">
@@ -405,9 +519,10 @@
         <!-- Header & Toggle Buttons -->
         <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-6 border-b pb-4">
             <h3 class="font-bold text-xl text-rsct-dark"><i class="fas fa-user-graduate text-rsct-red mr-2"></i> จัดการข้อมูลนักเรียน</h3>
-            <div class="flex gap-2 w-full md:w-auto">
-                <button type="button" onclick="toggleStudentMode('add')" class="flex-1 md:flex-none bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 font-bold shadow"><i class="fas fa-plus mr-1"></i> เพิ่มนักเรียน</button>
-                <button type="button" onclick="toggleStudentMode('edit')" class="flex-1 md:flex-none bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 font-bold shadow"><i class="fas fa-edit mr-1"></i> แก้ไขข้อมูล</button>
+            <div class="flex flex-wrap gap-2 w-full md:w-auto justify-end">
+                <button type="button" onclick="openStudentReportModal()" class="flex-1 md:flex-none bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 font-bold shadow transition"><i class="fas fa-file-alt mr-1"></i> รายงาน</button>
+                <button type="button" onclick="toggleStudentMode('add')" class="flex-1 md:flex-none bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 font-bold shadow transition"><i class="fas fa-plus mr-1"></i> เพิ่ม</button>
+                <button type="button" onclick="toggleStudentMode('edit')" class="flex-1 md:flex-none bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 font-bold shadow transition"><i class="fas fa-edit mr-1"></i> แก้ไข</button>
             </div>
         </div>
 
@@ -2048,6 +2163,29 @@
             }
         }
 
+        // --- เพิ่มฟังก์ชันจัดการแถว "แผนการเรียน" (Study Plan) ---
+        function addStudyPlanRow(name = '') {
+            const tbody = document.querySelector('#studyPlanTable tbody');
+            if(!tbody) return;
+            const tr = document.createElement('tr');
+            tr.className = 'border-b hover:bg-gray-50 plan-row';
+            const index = tbody.children.length + 1;
+            tr.innerHTML = `
+                <td class="p-2 text-center font-bold text-gray-500 plan-index">${index}</td>
+                <td class="p-2"><input type="text" class="w-full border rounded p-1 plan-name" value="${name}" placeholder="ชื่อแผนการเรียน เช่น วิทย์-คณิต"></td>
+                <td class="p-2 text-center"><button type="button" onclick="removeStudyPlanRow(this)" class="text-red-500 hover:text-red-700"><i class="fas fa-trash-alt"></i></button></td>
+            `;
+            tbody.appendChild(tr);
+        }
+
+        function removeStudyPlanRow(btn) {
+            btn.closest('tr').remove();
+            document.querySelectorAll('.plan-row').forEach((row, idx) => {
+                row.querySelector('.plan-index').innerText = idx + 1;
+            });
+        }
+        // -----------------------------------------------------
+
         function initSettingsTables() {
             const pTbody = document.querySelector('#periodTable tbody');
             if(pTbody) pTbody.innerHTML = '';
@@ -2060,6 +2198,10 @@
 
             const deptTbody = document.querySelector('#departmentTable tbody');
             if(deptTbody) deptTbody.innerHTML = '';
+
+            // เคลียร์ตารางแผนการเรียนด้วย
+            const planTbody = document.querySelector('#studyPlanTable tbody');
+            if(planTbody) planTbody.innerHTML = '';
 
             buildPermissionTable();
         }
@@ -2201,6 +2343,14 @@
                 if(name.trim()) depts.push({ name: name.trim() });
             });
             document.getElementById('departmentsData').value = JSON.stringify(depts);
+
+            // ดึงข้อมูลแผนการเรียน
+            const plans = [];
+            document.querySelectorAll('#studyPlanTable tbody tr').forEach(tr => {
+                const name = tr.querySelector('.plan-name').value;
+                if(name.trim()) plans.push({ name: name.trim() });
+            });
+            document.getElementById('studyPlansData').value = JSON.stringify(plans);
 
             const perms = {};
             document.querySelectorAll('#permTable tbody tr').forEach(tr => {
@@ -2518,19 +2668,27 @@
                         return String(a.studentId).localeCompare(String(b.studentId));
                     });
 
+                    const isLockedLeave = (currentUserRole !== 'ผู้ดูแลระบบ');
+                    const leaveLockClass = isLockedLeave ? 'pointer-events-none opacity-50' : 'cursor-pointer hover:font-bold';
+                    const leaveTitle = isLockedLeave ? 'title="อัปเดตอัตโนมัติจากระบบแจ้งลา (ติดต่อแอดมินเพื่อแก้ไข)"' : '';
+
                     sortedStudents.forEach((st, idx) => {
                         const displayRoom = (st.room && st.room !== '-') ? `${st.level}/${st.room}` : st.level;
-                        const isLeave = checkStudentLeaveStatus(st.studentId, classDate);
+                        const leaveType = getStudentLeaveType(st.studentId, classDate);
+                        const isLeave = !!leaveType;
                         
                         const chkHere = !isLeave ? 'checked' : '';
-                        const chkLeave = isLeave ? 'checked' : '';
+                        const chkSick = leaveType === 'ลาป่วย' ? 'checked' : '';
+                        const chkPersonal = (leaveType === 'ลากิจ' || leaveType === 'ลากลับบ้าน') ? 'checked' : '';
+                        const chkSport = (leaveType === 'แข่งขันกีฬา' || leaveType === 'ลาแข่งขัน') ? 'checked' : '';
 
                         const statusRadios = `
-                            <label class="text-green-600 cursor-pointer hover:font-bold"><input type="radio" name="catt_${st.studentId}" value="มาเรียน" class="accent-green-600 mr-1" ${chkHere}> มาเรียน</label>
-                            <label class="text-yellow-600 cursor-pointer hover:font-bold"><input type="radio" name="catt_${st.studentId}" value="สาย" class="accent-yellow-600 mr-1"> สาย</label>
-                            <label class="text-blue-500 cursor-pointer hover:font-bold"><input type="radio" name="catt_${st.studentId}" value="ลา" class="accent-blue-500 mr-1" ${chkLeave}> ลา</label>
+                            <label class="text-green-600 cursor-pointer hover:font-bold"><input type="radio" name="catt_${st.studentId}" value="มา" class="accent-green-600 mr-1" ${chkHere}> มา</label>
                             <label class="text-red-500 cursor-pointer hover:font-bold"><input type="radio" name="catt_${st.studentId}" value="ขาด" class="accent-red-500 mr-1"> ขาด</label>
-                            <label class="text-purple-600 cursor-pointer hover:font-bold"><input type="radio" name="catt_${st.studentId}" value="หนีเรียน" class="accent-purple-600 mr-1"> หนีเรียน</label>
+                            <label class="text-yellow-600 cursor-pointer hover:font-bold"><input type="radio" name="catt_${st.studentId}" value="สาย" class="accent-yellow-600 mr-1"> สาย</label>
+                            <label class="text-yellow-500 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="catt_${st.studentId}" value="ลาป่วย" class="accent-yellow-500 mr-1" ${chkSick}> ลาป่วย</label>
+                            <label class="text-yellow-600 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="catt_${st.studentId}" value="ลากิจ" class="accent-yellow-600 mr-1" ${chkPersonal}> ลากิจ</label>
+                            <label class="text-blue-500 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="catt_${st.studentId}" value="ลาแข่งขัน" class="accent-blue-500 mr-1" ${chkSport}> ลาแข่งขัน</label>
                         `;
 
                         tbody.innerHTML += `
@@ -2589,13 +2747,18 @@
                     const tbody = document.getElementById('classCheckTableBody');
                     tbody.innerHTML = '';
                     
+                    const isLockedLeave = (currentUserRole !== 'ผู้ดูแลระบบ');
+                    const leaveLockClass = isLockedLeave ? 'pointer-events-none opacity-50' : 'cursor-pointer hover:font-bold';
+                    const leaveTitle = isLockedLeave ? 'title="อัปเดตอัตโนมัติจากระบบแจ้งลา (ติดต่อแอดมินเพื่อแก้ไข)"' : '';
+
                     res.data.forEach((st, idx) => {
                         const statusRadios = `
-                            <label class="text-green-600 cursor-pointer hover:font-bold"><input type="radio" name="catt_${st.studentId}" value="มาเรียน" class="accent-green-600 mr-1" ${st.status === 'มาเรียน' ? 'checked' : ''}> มาเรียน</label>
-                            <label class="text-yellow-600 cursor-pointer hover:font-bold"><input type="radio" name="catt_${st.studentId}" value="สาย" class="accent-yellow-600 mr-1" ${st.status === 'สาย' ? 'checked' : ''}> สาย</label>
-                            <label class="text-blue-500 cursor-pointer hover:font-bold"><input type="radio" name="catt_${st.studentId}" value="ลา" class="accent-blue-500 mr-1" ${st.status === 'ลา' ? 'checked' : ''}> ลา</label>
+                            <label class="text-green-600 cursor-pointer hover:font-bold"><input type="radio" name="catt_${st.studentId}" value="มา" class="accent-green-600 mr-1" ${st.status === 'มา' || st.status === 'มาเรียน' ? 'checked' : ''}> มา</label>
                             <label class="text-red-500 cursor-pointer hover:font-bold"><input type="radio" name="catt_${st.studentId}" value="ขาด" class="accent-red-500 mr-1" ${st.status === 'ขาด' ? 'checked' : ''}> ขาด</label>
-                            <label class="text-purple-600 cursor-pointer hover:font-bold"><input type="radio" name="catt_${st.studentId}" value="หนีเรียน" class="accent-purple-600 mr-1" ${st.status === 'หนีเรียน' ? 'checked' : ''}> หนีเรียน</label>
+                            <label class="text-yellow-600 cursor-pointer hover:font-bold"><input type="radio" name="catt_${st.studentId}" value="สาย" class="accent-yellow-600 mr-1" ${st.status === 'สาย' ? 'checked' : ''}> สาย</label>
+                            <label class="text-yellow-500 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="catt_${st.studentId}" value="ลาป่วย" class="accent-yellow-500 mr-1" ${st.status === 'ลาป่วย' ? 'checked' : ''}> ลาป่วย</label>
+                            <label class="text-yellow-600 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="catt_${st.studentId}" value="ลากิจ" class="accent-yellow-600 mr-1" ${st.status === 'ลากิจ' || st.status === 'ลากลับบ้าน' ? 'checked' : ''}> ลากิจ</label>
+                            <label class="text-blue-500 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="catt_${st.studentId}" value="ลาแข่งขัน" class="accent-blue-500 mr-1" ${st.status === 'ลาแข่งขัน' || st.status === 'แข่งขันกีฬา' ? 'checked' : ''}> ลาแข่งขัน</label>
                         `;
 
                         tbody.innerHTML += `
@@ -3236,9 +3399,10 @@
             });
         }
 
-        function checkStudentLeaveStatus(studentId, targetDateStr) {
-            if (!masterLeaveData || masterLeaveData.length === 0) return false;
-            if (!targetDateStr) return false;
+        // เพิ่มฟังก์ชันดึงประเภทการลาที่เจาะจงของนักเรียน
+        function getStudentLeaveType(studentId, targetDateStr) {
+            if (!masterLeaveData || masterLeaveData.length === 0) return null;
+            if (!targetDateStr) return null;
 
             const targetDate = new Date(targetDateStr);
             targetDate.setHours(0,0,0,0);
@@ -3268,12 +3432,16 @@
                         else endDate.setHours(23,59,59,999);
 
                         if (targetDate >= startDate && targetDate <= endDate) {
-                            return true; // พบว่าลาตรงกับวันที่ค้นหา
+                            return leave.type; // คืนค่าประเภทการลา
                         }
                     }
                 }
             }
-            return false;
+            return null;
+        }
+
+        function checkStudentLeaveStatus(studentId, targetDateStr) {
+            return !!getStudentLeaveType(studentId, targetDateStr);
         }
 
         // ================= API CALLS =================
@@ -3628,13 +3796,13 @@
                         const stRoomCombined = (stRm && stRm !== '-') ? `${stLvl}/${stRm}` : stLvl;
                         const stSport = String(st.sportType || '').replace(/\s+/g, '').toLowerCase();
                         
-                        let roomMatch = true;
-                        if(targetRooms.length > 0) roomMatch = targetRooms.includes(stRoomCombined) || targetRooms.includes(stLvl);
+                        let matchRoom = true;
+                        if(targetRooms.length > 0 && targetRooms[0] !== 'ทั้งหมด') matchRoom = targetRooms.includes(stRoomCombined) || targetRooms.includes(stLvl);
                         
-                        let sportMatch = true;
-                        if(targetSports.length > 0) sportMatch = targetSports.some(s => stSport === s || stSport.includes(s) || s.includes(stSport));
+                        let matchSport = true;
+                        if(targetSports.length > 0 && targetSports[0] !== 'ทั้งหมด') matchSport = targetSports.some(s => stSport === s || stSport.includes(s) || s.includes(stSport));
                         
-                        return roomMatch && sportMatch;
+                        return matchRoom && matchSport;
                     });
 
                     if(filteredStudents.length === 0) {
@@ -3649,17 +3817,51 @@
                         return String(a.studentId).localeCompare(String(b.studentId));
                     });
 
+                    const isDormRoutine = String(routineSelect).includes('อยู่หอ');
+                    const isPrayRoutine = String(routineSelect).includes('ละหมาด');
+                    
+                    const isLockedLeave = (currentUserRole !== 'ผู้ดูแลระบบ');
+                    const leaveLockClass = isLockedLeave ? 'pointer-events-none opacity-50' : 'cursor-pointer hover:font-bold';
+                    const leaveTitle = isLockedLeave ? 'title="อัปเดตอัตโนมัติจากระบบแจ้งลา (ติดต่อแอดมินเพื่อแก้ไข)"' : '';
+
                     sortedStudents.forEach((st, idx) => {
                         const displayRoom = (st.room && st.room !== '-') ? `${st.level}/${st.room}` : st.level;
-                        const isLeave = checkStudentLeaveStatus(st.studentId, routineDate);
+                        const leaveType = getStudentLeaveType(st.studentId, routineDate);
+                        const isLeave = !!leaveType;
                         let statusRadios = '';
+                        
                         if(isDutyRoutine) {
                             const chkDuty = !isLeave ? 'checked' : '';
                             const chkLeave = isLeave ? 'checked' : '';
                             statusRadios = `
                                 <label class="text-green-600 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="ทำเวร" class="accent-green-600 mr-1" ${chkDuty}> ทำเวร</label>
                                 <label class="text-red-500 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="ไม่ทำเวร" class="accent-red-500 mr-1"> ไม่ทำเวร</label>
-                                <label class="text-yellow-500 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="ลา" class="accent-yellow-500 mr-1" ${chkLeave}> ลา</label>
+                                <label class="text-yellow-500 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="att_${st.studentId}" value="ลา" class="accent-yellow-500 mr-1" ${chkLeave}> ลา</label>
+                            `;
+                        } else if (isDormRoutine) {
+                            const chkHere = !isLeave ? 'checked' : '';
+                            const chkSick = leaveType === 'ลาป่วย' ? 'checked' : '';
+                            const chkPersonal = (leaveType === 'ลากิจ' || leaveType === 'ลากลับบ้าน') ? 'checked' : '';
+                            const chkSport = (leaveType === 'แข่งขันกีฬา' || leaveType === 'ลาแข่งขัน') ? 'checked' : '';
+                            statusRadios = `
+                                <label class="text-green-600 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="อยู่" class="accent-green-600 mr-1" ${chkHere}> อยู่</label>
+                                <label class="text-red-500 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="ไม่อยู่" class="accent-red-500 mr-1"> ไม่อยู่</label>
+                                <label class="text-yellow-500 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="att_${st.studentId}" value="ลาป่วย" class="accent-yellow-500 mr-1" ${chkSick}> ลาป่วย</label>
+                                <label class="text-yellow-600 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="att_${st.studentId}" value="ลากิจ" class="accent-yellow-600 mr-1" ${chkPersonal}> ลากิจ</label>
+                                <label class="text-blue-500 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="att_${st.studentId}" value="ลาแข่งขัน" class="accent-blue-500 mr-1" ${chkSport}> ลาแข่งขัน</label>
+                            `;
+                        } else if (isPrayRoutine) {
+                            const chkPray = !isLeave ? 'checked' : '';
+                            const chkSick = leaveType === 'ลาป่วย' ? 'checked' : '';
+                            const chkPersonal = (leaveType === 'ลากิจ' || leaveType === 'ลากลับบ้าน') ? 'checked' : '';
+                            const chkSport = (leaveType === 'แข่งขันกีฬา' || leaveType === 'ลาแข่งขัน') ? 'checked' : '';
+                            statusRadios = `
+                                <label class="text-green-600 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="ละหมาด" class="accent-green-600 mr-1" ${chkPray}> ละหมาด</label>
+                                <label class="text-pink-500 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="ประจำเดือน" class="accent-pink-500 mr-1"> ประจำเดือน</label>
+                                <label class="text-red-500 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="ไม่ละหมาด" class="accent-red-500 mr-1"> ไม่ละหมาด</label>
+                                <label class="text-yellow-500 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="att_${st.studentId}" value="ลาป่วย" class="accent-yellow-500 mr-1" ${chkSick}> ลาป่วย</label>
+                                <label class="text-yellow-600 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="att_${st.studentId}" value="ลากิจ" class="accent-yellow-600 mr-1" ${chkPersonal}> ลากิจ</label>
+                                <label class="text-blue-500 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="att_${st.studentId}" value="ลาแข่งขัน" class="accent-blue-500 mr-1" ${chkSport}> ลาแข่งขัน</label>
                             `;
                         } else {
                             const chkHere = !isLeave ? 'checked' : '';
@@ -3667,7 +3869,7 @@
                             statusRadios = `
                                 <label class="text-green-600 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="อยู่" class="accent-green-600 mr-1" ${chkHere}> อยู่</label>
                                 <label class="text-red-500 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="ไม่อยู่" class="accent-red-500 mr-1"> ไม่อยู่</label>
-                                <label class="text-yellow-500 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="ลา" class="accent-yellow-500 mr-1" ${chkLeave}> ลา</label>
+                                <label class="text-yellow-500 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="att_${st.studentId}" value="ลา" class="accent-yellow-500 mr-1" ${chkLeave}> ลา</label>
                                 <label class="text-purple-600 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="หนี" class="accent-purple-600 mr-1"> หนี</label>
                             `;
                         }
@@ -3715,14 +3917,14 @@
                         // เพิ่มการกรองข้อมูลเดิม ให้แสดงเฉพาะนักเรียนที่อยู่ในเป้าหมายของครูคนนี้เท่านั้น!
                         const filteredRecords = res.data.filter(st => {
                             let matchRoom = true;
-                            if(targetRooms.length > 0) {
+                            if(targetRooms.length > 0 && targetRooms[0] !== 'ทั้งหมด') {
                                 const stRoomCombined = String(st.room || '').replace(/\s+/g, '').toLowerCase();
-                                const stLvl = stRoomCombined.split('/')[0];
+                                const stLvl = stRoomCombined.split('/')[0] || '';
                                 matchRoom = targetRooms.includes(stRoomCombined) || targetRooms.includes(stLvl);
                             }
                             
                             let matchSport = true;
-                            if(targetSports.length > 0) {
+                            if(targetSports.length > 0 && targetSports[0] !== 'ทั้งหมด') {
                                 const stSport = String(st.sport || '').replace(/\s+/g, '').toLowerCase();
                                 matchSport = targetSports.some(s => stSport === s || stSport.includes(s) || s.includes(stSport));
                             }
@@ -3747,23 +3949,48 @@
 
         function renderEditRoutineTable(routineSelect, savedRecords) {
             const isDutyRoutine = String(routineSelect).includes('เวร') || String(routineSelect).includes('ทำความสะอาด');
+            const isDormRoutine = String(routineSelect).includes('อยู่หอ');
+            const isPrayRoutine = String(routineSelect).includes('ละหมาด');
+
             const tbody = document.getElementById('routineCheckTableBody');
             tbody.innerHTML = '';
             
+            const isLockedLeave = (currentUserRole !== 'ผู้ดูแลระบบ');
+            const leaveLockClass = isLockedLeave ? 'pointer-events-none opacity-50' : 'cursor-pointer hover:font-bold';
+            const leaveTitle = isLockedLeave ? 'title="อัปเดตอัตโนมัติจากระบบแจ้งลา (ติดต่อแอดมินเพื่อแก้ไข)"' : '';
+
             savedRecords.forEach((st, idx) => {
                 let statusRadios = '';
+                const stat = st.status;
                 if(isDutyRoutine) {
                     statusRadios = `
-                        <label class="text-green-600 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="ทำเวร" class="accent-green-600 mr-1" ${st.status === 'ทำเวร' ? 'checked' : ''}> ทำเวร</label>
-                        <label class="text-red-500 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="ไม่ทำเวร" class="accent-red-500 mr-1" ${st.status === 'ไม่ทำเวร' ? 'checked' : ''}> ไม่ทำเวร</label>
-                        <label class="text-yellow-500 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="ลา" class="accent-yellow-500 mr-1" ${st.status === 'ลา' ? 'checked' : ''}> ลา</label>
+                        <label class="text-green-600 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="ทำเวร" class="accent-green-600 mr-1" ${stat === 'ทำเวร' ? 'checked' : ''}> ทำเวร</label>
+                        <label class="text-red-500 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="ไม่ทำเวร" class="accent-red-500 mr-1" ${stat === 'ไม่ทำเวร' ? 'checked' : ''}> ไม่ทำเวร</label>
+                        <label class="text-yellow-500 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="att_${st.studentId}" value="ลา" class="accent-yellow-500 mr-1" ${stat === 'ลา' ? 'checked' : ''}> ลา</label>
+                    `;
+                } else if (isDormRoutine) {
+                    statusRadios = `
+                        <label class="text-green-600 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="อยู่" class="accent-green-600 mr-1" ${stat === 'อยู่' ? 'checked' : ''}> อยู่</label>
+                        <label class="text-red-500 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="ไม่อยู่" class="accent-red-500 mr-1" ${stat === 'ไม่อยู่' ? 'checked' : ''}> ไม่อยู่</label>
+                        <label class="text-yellow-500 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="att_${st.studentId}" value="ลาป่วย" class="accent-yellow-500 mr-1" ${stat === 'ลาป่วย' ? 'checked' : ''}> ลาป่วย</label>
+                        <label class="text-yellow-600 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="att_${st.studentId}" value="ลากิจ" class="accent-yellow-600 mr-1" ${stat === 'ลากิจ' || stat === 'ลากลับบ้าน' ? 'checked' : ''}> ลากิจ</label>
+                        <label class="text-blue-500 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="att_${st.studentId}" value="ลาแข่งขัน" class="accent-blue-500 mr-1" ${stat === 'ลาแข่งขัน' || stat === 'แข่งขันกีฬา' ? 'checked' : ''}> ลาแข่งขัน</label>
+                    `;
+                } else if (isPrayRoutine) {
+                    statusRadios = `
+                        <label class="text-green-600 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="ละหมาด" class="accent-green-600 mr-1" ${stat === 'ละหมาด' ? 'checked' : ''}> ละหมาด</label>
+                        <label class="text-pink-500 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="ประจำเดือน" class="accent-pink-500 mr-1" ${stat === 'ประจำเดือน' ? 'checked' : ''}> ประจำเดือน</label>
+                        <label class="text-red-500 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="ไม่ละหมาด" class="accent-red-500 mr-1" ${stat === 'ไม่ละหมาด' ? 'checked' : ''}> ไม่ละหมาด</label>
+                        <label class="text-yellow-500 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="att_${st.studentId}" value="ลาป่วย" class="accent-yellow-500 mr-1" ${stat === 'ลาป่วย' ? 'checked' : ''}> ลาป่วย</label>
+                        <label class="text-yellow-600 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="att_${st.studentId}" value="ลากิจ" class="accent-yellow-600 mr-1" ${stat === 'ลากิจ' || stat === 'ลากลับบ้าน' ? 'checked' : ''}> ลากิจ</label>
+                        <label class="text-blue-500 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="att_${st.studentId}" value="ลาแข่งขัน" class="accent-blue-500 mr-1" ${stat === 'ลาแข่งขัน' || stat === 'แข่งขันกีฬา' ? 'checked' : ''}> ลาแข่งขัน</label>
                     `;
                 } else {
                     statusRadios = `
-                        <label class="text-green-600 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="อยู่" class="accent-green-600 mr-1" ${st.status === 'อยู่' ? 'checked' : ''}> อยู่</label>
-                        <label class="text-red-500 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="ไม่อยู่" class="accent-red-500 mr-1" ${st.status === 'ไม่อยู่' ? 'checked' : ''}> ไม่อยู่</label>
-                        <label class="text-yellow-500 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="ลา" class="accent-yellow-500 mr-1" ${st.status === 'ลา' ? 'checked' : ''}> ลา</label>
-                        <label class="text-purple-600 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="หนี" class="accent-purple-600 mr-1" ${st.status === 'หนี' ? 'checked' : ''}> หนี</label>
+                        <label class="text-green-600 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="อยู่" class="accent-green-600 mr-1" ${stat === 'อยู่' ? 'checked' : ''}> อยู่</label>
+                        <label class="text-red-500 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="ไม่อยู่" class="accent-red-500 mr-1" ${stat === 'ไม่อยู่' ? 'checked' : ''}> ไม่อยู่</label>
+                        <label class="text-yellow-500 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="att_${st.studentId}" value="ลา" class="accent-yellow-500 mr-1" ${stat === 'ลา' ? 'checked' : ''}> ลา</label>
+                        <label class="text-purple-600 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="หนี" class="accent-purple-600 mr-1" ${stat === 'หนี' ? 'checked' : ''}> หนี</label>
                     `;
                 }
 
@@ -3891,6 +4118,10 @@
                         document.getElementById('stu_level').value = lr[0]; document.getElementById('stu_room').value = lr[1];
                     } else {
                         document.getElementById('stu_level').value = st.level; document.getElementById('stu_room').value = (st.room && st.room !== "-") ? st.room : "1";
+                    }
+                    
+                    if (document.getElementById('stu_plan')) {
+                        document.getElementById('stu_plan').value = st.plan || '';
                     }
                     
                     document.getElementById('stu_addressNo').value = st.addressNo; document.getElementById('stu_moo').value = st.moo; document.getElementById('stu_province').value = st.province;
@@ -4039,6 +4270,27 @@
                             if (depts && depts.length > 0) { depts.forEach(d => { addDepartmentRow(d.name); if(d.name.trim() !== '') { tDeptSelect.innerHTML += `<option value="${d.name}">${d.name}</option>`; if(tdDeptSelect) tdDeptSelect.innerHTML += `<option value="${d.name}">${d.name}</option>`; } });
                             } else { addDepartmentRow(); }
                         } catch(e) { console.error("Error parsing departments:", e); }
+                    }
+
+                    if(res.data.studyPlansData) {
+                        try {
+                            const plans = JSON.parse(res.data.studyPlansData); 
+                            const tbody = document.querySelector('#studyPlanTable tbody');
+                            const stuPlanSelect = document.getElementById('stu_plan');
+                            if(tbody) tbody.innerHTML = ''; 
+                            if(stuPlanSelect) stuPlanSelect.innerHTML = '<option value="">-- เลือกแผนการเรียน --</option>';
+                            
+                            if (plans && plans.length > 0) { 
+                                plans.forEach(p => { 
+                                    addStudyPlanRow(p.name); 
+                                    if(p.name.trim() !== '' && stuPlanSelect) { 
+                                        stuPlanSelect.innerHTML += `<option value="${p.name}">${p.name}</option>`; 
+                                    } 
+                                });
+                            } else { 
+                                addStudyPlanRow(); 
+                            }
+                        } catch(e) { console.error("Error parsing study plans:", e); }
                     }
 
                     if(res.data.permissionsData) {
@@ -5726,12 +5978,35 @@
                 
                 let statusColor = 'text-gray-600';
                 let bgBadge = 'bg-gray-100';
+                
                 // จัดสีตามสถานะให้ครอบคลุมทุกบริบท
-                if(status.includes('มา') || status.includes('อยู่') || status.includes('ทำเวร')) { statusColor = 'text-green-700'; bgBadge = 'bg-green-100 border border-green-200'; }
-                else if(status.includes('ขาด') || status.includes('ไม่ทำเวร') || status.includes('ไม่อยู่')) { statusColor = 'text-red-700'; bgBadge = 'bg-red-100 border border-red-200'; }
-                else if(status.includes('ลา')) { statusColor = 'text-blue-700'; bgBadge = 'bg-blue-100 border border-blue-200'; }
-                else if(status.includes('สาย')) { statusColor = 'text-yellow-700'; bgBadge = 'bg-yellow-100 border border-yellow-200'; }
-                else if(status.includes('หนี')) { statusColor = 'text-purple-700'; bgBadge = 'bg-purple-100 border border-purple-200'; }
+                if(status.includes('มา') || status === 'อยู่' || status.includes('ทำเวร') || (status.includes('ละหมาด') && !status.includes('ไม่'))) { 
+                    statusColor = 'text-green-700'; bgBadge = 'bg-green-100 border border-green-200'; 
+                }
+                else if(status.includes('ประจำเดือน')) {
+                    statusColor = 'text-pink-700'; bgBadge = 'bg-pink-100 border border-pink-200';
+                }
+                else if(status.includes('ขาด') || status.includes('ไม่ทำเวร') || status.includes('ไม่อยู่') || status.includes('ไม่ละหมาด')) { 
+                    statusColor = 'text-red-700'; bgBadge = 'bg-red-100 border border-red-200'; 
+                }
+                else if(status.includes('ลาป่วย')) { 
+                    statusColor = 'text-orange-700'; bgBadge = 'bg-orange-100 border border-orange-200'; 
+                }
+                else if(status.includes('ลากิจ')) { 
+                    statusColor = 'text-yellow-700'; bgBadge = 'bg-yellow-100 border border-yellow-200'; 
+                }
+                else if(status.includes('ลาแข่งขัน')) { 
+                    statusColor = 'text-blue-700'; bgBadge = 'bg-blue-100 border border-blue-200'; 
+                }
+                else if(status.includes('ลา')) { 
+                    statusColor = 'text-blue-700'; bgBadge = 'bg-blue-100 border border-blue-200'; 
+                }
+                else if(status.includes('สาย')) { 
+                    statusColor = 'text-yellow-700'; bgBadge = 'bg-yellow-100 border border-yellow-200'; 
+                }
+                else if(status.includes('หนี')) { 
+                    statusColor = 'text-purple-700'; bgBadge = 'bg-purple-100 border border-purple-200'; 
+                }
 
                 tbodyHTML += `
                     <tr class="bg-white border-b hover:bg-blue-50 transition">
@@ -5750,11 +6025,16 @@
             let summaryHTML = '';
             for(let key in summary) {
                 let colorClass = 'bg-gray-50 border-gray-200 text-gray-700';
-                if(key.includes('มา') || key.includes('อยู่') || key.includes('ทำเวร')) colorClass = 'bg-green-50 border-green-200 text-green-700';
-                if(key.includes('ขาด') || key.includes('ไม่ทำเวร') || key.includes('ไม่อยู่')) colorClass = 'bg-red-50 border-red-200 text-red-700';
-                if(key.includes('ลา')) colorClass = 'bg-blue-50 border-blue-200 text-blue-700';
-                if(key.includes('สาย')) colorClass = 'bg-yellow-50 border-yellow-200 text-yellow-700';
-                if(key.includes('หนี')) colorClass = 'bg-purple-50 border-purple-200 text-purple-700';
+                
+                if(key.includes('มา') || key === 'อยู่' || key.includes('ทำเวร') || (key.includes('ละหมาด') && !key.includes('ไม่'))) colorClass = 'bg-green-50 border-green-200 text-green-700';
+                else if(key.includes('ประจำเดือน')) colorClass = 'bg-pink-50 border-pink-200 text-pink-700';
+                else if(key.includes('ขาด') || key.includes('ไม่ทำเวร') || key.includes('ไม่อยู่') || key.includes('ไม่ละหมาด')) colorClass = 'bg-red-50 border-red-200 text-red-700';
+                else if(key.includes('ลาป่วย')) colorClass = 'bg-orange-50 border-orange-200 text-orange-700';
+                else if(key.includes('ลากิจ')) colorClass = 'bg-yellow-50 border-yellow-200 text-yellow-700';
+                else if(key.includes('ลาแข่งขัน')) colorClass = 'bg-blue-50 border-blue-200 text-blue-700';
+                else if(key.includes('ลา')) colorClass = 'bg-blue-50 border-blue-200 text-blue-700';
+                else if(key.includes('สาย')) colorClass = 'bg-yellow-50 border-yellow-200 text-yellow-700';
+                else if(key.includes('หนี')) colorClass = 'bg-purple-50 border-purple-200 text-purple-700';
 
                 summaryHTML += `
                     <div class="border rounded-xl p-3 text-center shadow-sm ${colorClass}">
@@ -5872,6 +6152,216 @@
             const link = document.createElement('a');
             link.href = url;
             link.download = `รายงานเช็คชื่อ_${title}_${dateInput}.xls`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // ================= สคริปต์รายงานข้อมูลนักเรียน (เพิ่มใหม่) =================
+        let currentStudentReportData = [];
+
+        function openStudentReportModal() {
+            const modal = document.getElementById('studentReportModal');
+            const box = document.getElementById('studentReportModalBox');
+            
+            // Populate dropdowns
+            const roomSelect = document.getElementById('sr_room_select');
+            roomSelect.innerHTML = '<option value="">-- ทุกชั้น/ห้อง --</option>';
+            if (systemLevels && systemLevels.length > 0 && systemRoomsCount > 0) {
+                systemLevels.forEach(level => {
+                    for(let i=1; i<=systemRoomsCount; i++) {
+                        const roomName = `${level}/${i}`;
+                        roomSelect.innerHTML += `<option value="${roomName}">${roomName}</option>`;
+                    }
+                });
+            }
+
+            const sportSelect = document.getElementById('sr_sport_select');
+            sportSelect.innerHTML = '<option value="">-- ทุกชนิดกีฬา --</option>';
+            if (systemSportsList && systemSportsList.length > 0) {
+                systemSportsList.forEach(sp => {
+                    sportSelect.innerHTML += `<option value="${sp}">${sp}</option>`;
+                });
+            }
+            
+            // Reset state
+            document.getElementById('sr_report_type').value = '';
+            handleStudentReportTypeChange();
+            document.getElementById('studentReportBody').innerHTML = '<tr><td colspan="6" class="p-8 text-center text-gray-500"><i class="fas fa-hand-pointer text-2xl mb-2 block"></i> กรุณาเลือกประเภทรายงานและกดปุ่ม "ดึงข้อมูล"</td></tr>';
+            document.getElementById('btn_sr_print').classList.add('hidden');
+            document.getElementById('btn_sr_excel').classList.add('hidden');
+
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                box.classList.remove('scale-95', 'opacity-0');
+                box.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+
+        function closeStudentReportModal() {
+            const modal = document.getElementById('studentReportModal');
+            const box = document.getElementById('studentReportModalBox');
+            box.classList.remove('scale-100', 'opacity-100');
+            box.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 200);
+        }
+
+        function handleStudentReportTypeChange() {
+            const type = document.getElementById('sr_report_type').value;
+            const roomContainer = document.getElementById('sr_room_filter_container');
+            const sportContainer = document.getElementById('sr_sport_filter_container');
+            
+            roomContainer.classList.add('hidden');
+            sportContainer.classList.add('hidden');
+            document.getElementById('sr_room_select').value = '';
+            document.getElementById('sr_sport_select').value = '';
+
+            if (type === 'room') {
+                roomContainer.classList.remove('hidden');
+            } else if (type === 'sport') {
+                sportContainer.classList.remove('hidden');
+            }
+        }
+
+        function generateStudentReport() {
+            const type = document.getElementById('sr_report_type').value;
+            const roomFilter = document.getElementById('sr_room_select').value;
+            const sportFilter = document.getElementById('sr_sport_select').value;
+            
+            if (!type) {
+                return showToast("กรุณาเลือกประเภทรายงานก่อนดึงข้อมูล", "warning");
+            }
+
+            const tbody = document.getElementById('studentReportBody');
+            tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-gray-500"><i class="fas fa-spinner fa-spin text-2xl mb-2 block text-blue-500"></i>กำลังดึงข้อมูล...</td></tr>';
+            
+            document.getElementById('btn_sr_print').classList.add('hidden');
+            document.getElementById('btn_sr_excel').classList.add('hidden');
+
+            fetchAllStudents(function() {
+                if (!masterStudentData || masterStudentData.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-red-500"><i class="fas fa-exclamation-triangle text-2xl mb-2 block"></i> ไม่พบข้อมูลนักเรียนในระบบ</td></tr>';
+                    return;
+                }
+
+                let filtered = [];
+                let subtitle = "";
+
+                if (type === 'room') {
+                    filtered = masterStudentData.filter(st => {
+                        const stRm = (st.room && st.room !== '-') ? `${st.level}/${st.room}` : st.level;
+                        return roomFilter === "" || stRm === roomFilter;
+                    });
+                    subtitle = roomFilter ? `ชั้น/ห้อง: ${roomFilter}` : "ทุกชั้น/ห้อง (ทั้งหมด)";
+                } else if (type === 'sport') {
+                    filtered = masterStudentData.filter(st => {
+                        const stSport = st.sportType || '';
+                        return sportFilter === "" || stSport === sportFilter;
+                    });
+                    subtitle = sportFilter ? `ประเภทกีฬา: ${sportFilter}` : "ทุกประเภทกีฬา (ทั้งหมด)";
+                }
+
+                // เรียงลำดับตามห้อง แล้วตามด้วยรหัสประจำตัว
+                filtered.sort((a,b) => {
+                    const roomA = (a.room && a.room !== '-') ? `${a.level}/${a.room}` : a.level;
+                    const roomB = (b.room && b.room !== '-') ? `${b.level}/${b.room}` : b.level;
+                    if(roomA !== roomB) return String(roomA).localeCompare(String(roomB));
+                    return String(a.studentId).localeCompare(String(b.studentId));
+                });
+
+                currentStudentReportData = filtered;
+                document.getElementById('sr_print_subtitle').innerText = `เงื่อนไข: ${subtitle} | จำนวนนักเรียนทั้งหมด: ${filtered.length} คน`;
+
+                if (filtered.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-gray-500"><i class="fas fa-info-circle text-2xl mb-2 block"></i> ไม่พบข้อมูลตามเงื่อนไขที่เลือก</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = '';
+                filtered.forEach((st, idx) => {
+                    const sportText = st.sportType && st.sportType !== '-' ? st.sportType : (st.studentType === 'ทั่วไป' ? '-' : '');
+                    tbody.innerHTML += `
+                        <tr class="border-b hover:bg-blue-50 border-gray-200">
+                            <td class="p-2 text-center text-gray-500 border-r border-gray-200">${idx + 1}</td>
+                            <td class="p-2 text-center font-bold text-gray-800 border-r border-gray-200">${st.studentId || '-'}</td>
+                            <td class="p-2 border-r border-gray-200 text-gray-800">${st.prefix || ''}${st.fullName || '-'}</td>
+                            <td class="p-2 text-center border-r border-gray-200 text-gray-800">${st.level || '-'}</td>
+                            <td class="p-2 text-center border-r border-gray-200 text-gray-800">${st.room && st.room !== '-' ? st.room : '-'}</td>
+                            <td class="p-2 text-center text-sm text-gray-600">${sportText}</td>
+                        </tr>
+                    `;
+                });
+
+                document.getElementById('btn_sr_print').classList.remove('hidden');
+                document.getElementById('btn_sr_excel').classList.remove('hidden');
+                showToast(`ดึงข้อมูลเสร็จสิ้น จำนวน ${filtered.length} คน`, "success");
+
+            }, true); // ใช้ true เพื่อบังคับโหลดข้อมูลล่าสุด
+        }
+
+        function printStudentReport() {
+            // อัปเดตชื่อโรงเรียนในหัวกระดาษก่อนพิมพ์
+            const schoolNameElements = document.querySelectorAll('.school-name-text');
+            if (schoolNameElements.length > 0) {
+                document.getElementById('sr_print_title').innerText = `รายงานข้อมูลนักเรียน ${schoolNameElements[0].innerText}`;
+            }
+            
+            // แสดงหัวกระดาษและสั่งพิมพ์ (CSS @media print จะจัดการซ่อนส่วนอื่นๆ ให้เอง)
+            document.getElementById('sr_print_header').classList.remove('hidden');
+            window.print();
+            
+            // ซ่อนหัวกระดาษกลับไปหลังพิมพ์เสร็จ
+            setTimeout(() => {
+                document.getElementById('sr_print_header').classList.add('hidden');
+            }, 1000);
+        }
+
+        function exportStudentReportExcel() {
+            if (!currentStudentReportData || currentStudentReportData.length === 0) return;
+            
+            // อัปเดตชื่อโรงเรียน
+            let schoolName = "RSCT Sarnfan Care";
+            const schoolNameElements = document.querySelectorAll('.school-name-text');
+            if (schoolNameElements.length > 0 && schoolNameElements[0].innerText !== "กำลังโหลดชื่อโรงเรียน...") {
+                schoolName = schoolNameElements[0].innerText;
+            }
+
+            const title = `รายงานข้อมูลนักเรียน ${schoolName}`;
+            const subtitle = document.getElementById('sr_print_subtitle').innerText;
+            const table = document.querySelector('#studentReportTable');
+            
+            // ห่อตารางด้วย HTML เพื่อรองรับภาษาไทยใน Excel
+            let html = `
+            <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+            <head>
+                <meta charset="UTF-8">
+                <style>
+                    table { border-collapse: collapse; width: 100%; }
+                    th, td { border: 1px solid #000; padding: 5px; text-align: left; }
+                    th { background-color: #e2e8f0; }
+                </style>
+            </head>
+            <body>
+                <h2>${title}</h2>
+                <p><b>${subtitle}</b></p>
+                <p>วันที่พิมพ์: ${new Date().toLocaleDateString('th-TH')}</p>
+                <br>
+                ${table.outerHTML}
+            </body>
+            </html>`;
+            
+            // แปลงเป็น Blob และดาวน์โหลด
+            const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            
+            const dateStr = new Date().toISOString().split('T')[0];
+            const typeStr = document.getElementById('sr_report_type').value === 'room' ? 'ByRoom' : 'BySport';
+            link.download = `StudentData_${typeStr}_${dateStr}.xls`;
+            
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
