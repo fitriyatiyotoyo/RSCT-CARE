@@ -132,7 +132,7 @@
                             <th class="p-3 border-b border-r border-gray-300 w-32 text-center font-bold">เลขประจำตัว</th>
                             <th class="p-3 border-b border-r border-gray-300 font-bold">ชื่อ-สกุล</th>
                             <th class="p-3 border-b border-r border-gray-300 w-24 text-center font-bold">ชั้น</th>
-                            <th class="p-3 border-b border-r border-gray-300 w-24 text-center font-bold">ห้อง</th>
+                            <th class="p-3 border-b border-r border-gray-300 w-24 text-center font-bold">แผนการเรียน</th>
                             <th class="p-3 border-b border-gray-300 text-center font-bold">ประเภทกีฬา</th>
                         </tr>
                     </thead>
@@ -627,6 +627,12 @@
                             <select id="stu_room" name="room" class="w-full border rounded p-2 focus:ring-1 focus:ring-rsct-red">
                             </select>
                         </div>
+                        <div class="flex-1">
+                            <label class="block text-sm mb-1 font-medium">แผนการเรียน</label>
+                            <select id="stu_plan" name="plan" class="w-full border rounded p-2 focus:ring-1 focus:ring-rsct-red">
+                                <option value="">-- เลือกแผนการเรียน --</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -820,6 +826,10 @@
             document.getElementById('stu_prefix').value = foundStudent.prefix || "";
             document.getElementById('stu_fullname').value = foundStudent.fullName || "";
             document.getElementById('studentFormMode').value = "edit"; // เปลี่ยนโหมดเป็นแก้ไขเพื่อให้บันทึกทับ
+            
+            if (document.getElementById('stu_plan')) {
+                document.getElementById('stu_plan').value = foundStudent.plan || "";
+            }
 
             // 2. ***จุดสำคัญ*** นำรูปภาพที่บันทึกไว้กลับมาแสดง
             const previewImg = document.getElementById('photoPreview');
@@ -1872,16 +1882,17 @@
                 
                 <!-- ส่วนที่เพิ่มใหม่: พิกัด GPS -->
                 <div class="lg:col-span-2">
-                    <label class="block text-sm mb-1 font-medium">พิกัด GPS (ละติจูด, ลองจิจูด)</label>
+                    <label class="block text-sm mb-1 font-medium">พิกัด GPS (ละติจูด, ลองจิจูด) และรัศมี</label>
                     <div class="flex items-center gap-2">
                         <input type="text" id="r_lat" class="w-full border rounded p-2 focus:ring-1 focus:ring-red-500" placeholder="Latitude (เช่น 13.7563)">
                         <input type="text" id="r_lng" class="w-full border rounded p-2 focus:ring-1 focus:ring-red-500" placeholder="Longitude (เช่น 100.5018)">
+                        <input type="number" id="r_radius" class="w-24 border rounded p-2 focus:ring-1 focus:ring-red-500" placeholder="รัศมี (ม.)" value="50" min="10" title="รัศมีที่อนุญาตให้เช็คชื่อ (เมตร)">
                         <!-- เพิ่มข้อความอธิบายในปุ่มให้ชัดเจนขึ้น -->
                         <button type="button" onclick="getCurrentLocation()" class="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 transition shrink-0 whitespace-nowrap" title="ดึงตำแหน่งปัจจุบัน">
                             <i class="fas fa-map-marker-alt mr-1"></i> ดึงพิกัด
                         </button>
                     </div>
-                    <p class="text-xs text-gray-500 mt-1">* ระบุพิกัดเพื่อให้ระบบตรวจสอบรัศมีการเช็คชื่อได้ (กดปุ่มเพื่อดึงตำแหน่งปัจจุบัน)</p>
+                    <p class="text-xs text-gray-500 mt-1">* ระบุพิกัดและรัศมีเพื่อให้ระบบตรวจสอบระยะการเช็คชื่อได้ (กดปุ่มเพื่อดึงตำแหน่งปัจจุบัน)</p>
                 </div>
 
                 <div class="lg:col-span-4 flex justify-end mt-2">
@@ -1899,6 +1910,7 @@
                         <th class="p-3 border-b">รายการกิจวัตร</th>
                         <th class="p-3 border-b">สถานที่</th>
                         <th class="p-3 border-b">พิกัด GPS</th>
+                        <th class="p-3 border-b w-24 text-center">รัศมี (ม.)</th>
                         <th class="p-3 border-b text-center w-24">จัดการ</th>
                     </tr>
                 </thead>
@@ -3233,9 +3245,11 @@
             fetchAllStudents(function() {
                 fetchAllLeaves(function() {
                     let totalStudents = masterStudentData ? masterStudentData.length : 0;
-                    let leavesToday = 0;
                     let todayObj = new Date();
                     todayObj.setHours(0,0,0,0);
+                    
+                    let targetDateStr = `${todayObj.getDate()}/${todayObj.getMonth() + 1}/${todayObj.getFullYear() + 543}`;
+                    let leaveIds = new Set();
 
                     if(masterLeaveData) {
                         masterLeaveData.forEach(leave => {
@@ -3259,23 +3273,40 @@
                                     
                                     if(todayObj >= dStart && todayObj <= dEnd) {
                                         let stList = leave.student;
-                                        if(stList) leavesToday += stList.split(',').length;
+                                        if(stList) {
+                                            let sts = stList.split(',');
+                                            sts.forEach(s => {
+                                                let sid = s.split('-')[0].trim();
+                                                leaveIds.add(sid);
+                                            });
+                                        }
                                     }
                                 }
                             }
                         });
                     }
 
-                    let presentStudents = totalStudents - leavesToday;
-                    
-                    const elTotal = document.getElementById("dash_total_student_val");
-                    const elPresent = document.getElementById("dash_present_student_val");
-                    const elLeave = document.getElementById("dash_leave_student_val");
-                    
-                    // ใช้ฟังก์ชัน animateValue เพื่อให้ตัวเลขวิ่งสวยงามเมื่อเปิดหน้าเว็บ
-                    if(elTotal) animateValue("dash_total_student_val", 0, totalStudents, 800);
-                    if(elPresent) animateValue("dash_present_student_val", 0, presentStudents, 800);
-                    if(elLeave) animateValue("dash_leave_student_val", 0, leavesToday, 800);
+                    // ดึงข้อมูลการเช็คชื่อกิจวัตรของวันนี้ (เช่น ไม่อยู่/หนี) มาหักลบด้วยเพื่อให้ยอดคงเหลือตรงตามจริง
+                    sendJSONP('getDailyDormStats', { targetDate: targetDateStr }, function(res) {
+                        let absentIds = new Set();
+                        if (res.status === 'success' && res.data && res.data.absentIds) {
+                            res.data.absentIds.forEach(id => absentIds.add(id));
+                        }
+                        
+                        let leavesToday = leaveIds.size;
+                        let totalAbsentOrLeave = new Set([...leaveIds, ...absentIds]);
+                        
+                        let presentStudents = totalStudents - totalAbsentOrLeave.size;
+                        if (presentStudents < 0) presentStudents = 0;
+                        
+                        const elTotal = document.getElementById("dash_total_student_val");
+                        const elPresent = document.getElementById("dash_present_student_val");
+                        const elLeave = document.getElementById("dash_leave_student_val");
+                        
+                        if(elTotal) animateValue("dash_total_student_val", 0, totalStudents, 800);
+                        if(elPresent) animateValue("dash_present_student_val", 0, presentStudents, 800);
+                        if(elLeave) animateValue("dash_leave_student_val", 0, leavesToday, 800);
+                    });
                 });
             }, false); 
         }
@@ -3819,6 +3850,7 @@
 
                     const isDormRoutine = String(routineSelect).includes('อยู่หอ');
                     const isPrayRoutine = String(routineSelect).includes('ละหมาด');
+                    const isFlagRoutine = String(routineSelect).includes('หน้าเสาธง');
                     
                     const isLockedLeave = (currentUserRole !== 'ผู้ดูแลระบบ');
                     const leaveLockClass = isLockedLeave ? 'pointer-events-none opacity-50' : 'cursor-pointer hover:font-bold';
@@ -3859,6 +3891,19 @@
                                 <label class="text-green-600 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="ละหมาด" class="accent-green-600 mr-1" ${chkPray}> ละหมาด</label>
                                 <label class="text-pink-500 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="ประจำเดือน" class="accent-pink-500 mr-1"> ประจำเดือน</label>
                                 <label class="text-red-500 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="ไม่ละหมาด" class="accent-red-500 mr-1"> ไม่ละหมาด</label>
+                                <label class="text-yellow-500 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="att_${st.studentId}" value="ลาป่วย" class="accent-yellow-500 mr-1" ${chkSick}> ลาป่วย</label>
+                                <label class="text-yellow-600 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="att_${st.studentId}" value="ลากิจ" class="accent-yellow-600 mr-1" ${chkPersonal}> ลากิจ</label>
+                                <label class="text-blue-500 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="att_${st.studentId}" value="ลาแข่งขัน" class="accent-blue-500 mr-1" ${chkSport}> ลาแข่งขัน</label>
+                            `;
+                        } else if (isFlagRoutine) {
+                            const chkHere = !isLeave ? 'checked' : '';
+                            const chkSick = leaveType === 'ลาป่วย' ? 'checked' : '';
+                            const chkPersonal = (leaveType === 'ลากิจ' || leaveType === 'ลากลับบ้าน') ? 'checked' : '';
+                            const chkSport = (leaveType === 'แข่งขันกีฬา' || leaveType === 'ลาแข่งขัน') ? 'checked' : '';
+                            statusRadios = `
+                                <label class="text-green-600 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="มา" class="accent-green-600 mr-1" ${chkHere}> มา</label>
+                                <label class="text-red-500 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="ขาด" class="accent-red-500 mr-1"> ขาด</label>
+                                <label class="text-yellow-600 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="สาย" class="accent-yellow-600 mr-1"> สาย</label>
                                 <label class="text-yellow-500 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="att_${st.studentId}" value="ลาป่วย" class="accent-yellow-500 mr-1" ${chkSick}> ลาป่วย</label>
                                 <label class="text-yellow-600 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="att_${st.studentId}" value="ลากิจ" class="accent-yellow-600 mr-1" ${chkPersonal}> ลากิจ</label>
                                 <label class="text-blue-500 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="att_${st.studentId}" value="ลาแข่งขัน" class="accent-blue-500 mr-1" ${chkSport}> ลาแข่งขัน</label>
@@ -3951,6 +3996,7 @@
             const isDutyRoutine = String(routineSelect).includes('เวร') || String(routineSelect).includes('ทำความสะอาด');
             const isDormRoutine = String(routineSelect).includes('อยู่หอ');
             const isPrayRoutine = String(routineSelect).includes('ละหมาด');
+            const isFlagRoutine = String(routineSelect).includes('หน้าเสาธง');
 
             const tbody = document.getElementById('routineCheckTableBody');
             tbody.innerHTML = '';
@@ -3976,11 +4022,11 @@
                         <label class="text-yellow-600 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="att_${st.studentId}" value="ลากิจ" class="accent-yellow-600 mr-1" ${stat === 'ลากิจ' || stat === 'ลากลับบ้าน' ? 'checked' : ''}> ลากิจ</label>
                         <label class="text-blue-500 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="att_${st.studentId}" value="ลาแข่งขัน" class="accent-blue-500 mr-1" ${stat === 'ลาแข่งขัน' || stat === 'แข่งขันกีฬา' ? 'checked' : ''}> ลาแข่งขัน</label>
                     `;
-                } else if (isPrayRoutine) {
+                } else if (isFlagRoutine) {
                     statusRadios = `
-                        <label class="text-green-600 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="ละหมาด" class="accent-green-600 mr-1" ${stat === 'ละหมาด' ? 'checked' : ''}> ละหมาด</label>
-                        <label class="text-pink-500 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="ประจำเดือน" class="accent-pink-500 mr-1" ${stat === 'ประจำเดือน' ? 'checked' : ''}> ประจำเดือน</label>
-                        <label class="text-red-500 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="ไม่ละหมาด" class="accent-red-500 mr-1" ${stat === 'ไม่ละหมาด' ? 'checked' : ''}> ไม่ละหมาด</label>
+                        <label class="text-green-600 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="มา" class="accent-green-600 mr-1" ${stat === 'มา' ? 'checked' : ''}> มา</label>
+                        <label class="text-red-500 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="ขาด" class="accent-red-500 mr-1" ${stat === 'ขาด' ? 'checked' : ''}> ขาด</label>
+                        <label class="text-yellow-600 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="สาย" class="accent-yellow-600 mr-1" ${stat === 'สาย' ? 'checked' : ''}> สาย</label>
                         <label class="text-yellow-500 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="att_${st.studentId}" value="ลาป่วย" class="accent-yellow-500 mr-1" ${stat === 'ลาป่วย' ? 'checked' : ''}> ลาป่วย</label>
                         <label class="text-yellow-600 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="att_${st.studentId}" value="ลากิจ" class="accent-yellow-600 mr-1" ${stat === 'ลากิจ' || stat === 'ลากลับบ้าน' ? 'checked' : ''}> ลากิจ</label>
                         <label class="text-blue-500 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="att_${st.studentId}" value="ลาแข่งขัน" class="accent-blue-500 mr-1" ${stat === 'ลาแข่งขัน' || stat === 'แข่งขันกีฬา' ? 'checked' : ''}> ลาแข่งขัน</label>
@@ -4120,6 +4166,7 @@
                         document.getElementById('stu_level').value = st.level; document.getElementById('stu_room').value = (st.room && st.room !== "-") ? st.room : "1";
                     }
                     
+                    // ดึงแผนการเรียนกลับมาแสดงในฟอร์มเมื่อค้นหา
                     if (document.getElementById('stu_plan')) {
                         document.getElementById('stu_plan').value = st.plan || '';
                     }
@@ -4290,21 +4337,28 @@
                             } else { 
                                 addStudyPlanRow(); 
                             }
+                            
+                            // อัปเดต Dropdown แผนการเรียนในหน้าตารางสอนคาบ 1-9 อัตโนมัติ
+                            for(let i=1; i<=9; i++) {
+                                const pSelect = document.getElementById(`ts_p${i}_plan`);
+                                if(pSelect) {
+                                    const oldVal = pSelect.value;
+                                    pSelect.innerHTML = '<option value="">แผนการเรียน</option>';
+                                    plans.forEach(p => {
+                                        if(p.name.trim() !== '') pSelect.innerHTML += `<option value="${p.name}">${p.name}</option>`;
+                                    });
+                                    pSelect.value = oldVal;
+                                }
+                            }
                         } catch(e) { console.error("Error parsing study plans:", e); }
                     }
 
                     if(res.data.permissionsData) {
                         document.getElementById('permissionsData').value = res.data.permissionsData;
                         try {
-                            const savedPerms = JSON.parse(res.data.permissionsData);
-                            if(Object.keys(savedPerms).length > 0) {
-                                systemPermissions = savedPerms;
-                                document.querySelectorAll('#permTable tbody tr').forEach(tr => {
-                                    const menu = tr.dataset.menu; const allowedRoles = savedPerms[menu] || [];
-                                    tr.querySelectorAll('input[type="checkbox"]').forEach(cb => { if(cb.value !== 'ผู้ดูแลระบบ') { cb.checked = allowedRoles.includes(cb.value); } });
-                                });
-                                applyMenuPermissions(); 
-                            }
+                            systemPermissions = JSON.parse(res.data.permissionsData);
+                            buildPermissionTable();
+                            applyMenuPermissions();
                         } catch(e) { console.error("Error parsing permissions:", e); }
                     }
                 }
@@ -5337,7 +5391,8 @@
                             room: item.room || item['ชั้น/ห้อง'] || 'ทั้งหมด',
                             sport: item.sport || item['กีฬา'] || 'ทั้งหมด',
                             teacher: item.teacher || item['ชื่อ-สกุลครู'] || '-',
-                            gps: item.gps || item['พิกัด GPS'] || '-'
+                            gps: item.gps || item['พิกัด GPS'] || '-',
+                            radius: item.radius || item['รัศมี (เมตร)'] || '50'
                         };
                     }).filter(item => item.name && item.name.toString().trim() !== '' && item.name !== '-');
                     renderRoutineTable(); populateRoutineCheckDropdown(); populateTdRoutineDropdown(); populateSdRoutineDropdown(); 
@@ -5357,7 +5412,7 @@
 
         function renderRoutineTable() {
             const tbody = document.querySelector('#routineMainTable tbody'); tbody.innerHTML = '';
-            if(routineDataList.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="text-center p-4 text-gray-500">ยังไม่มีข้อมูลกิจวัตร (กรอกข้อมูลด้านบนแล้วกด "เพิ่มลงตารางด้านล่าง")</td></tr>'; return; }
+            if(routineDataList.length === 0) { tbody.innerHTML = '<tr><td colspan="6" class="text-center p-4 text-gray-500">ยังไม่มีข้อมูลกิจวัตร (กรอกข้อมูลด้านบนแล้วกด "เพิ่มลงตารางด้านล่าง")</td></tr>'; return; }
 
             routineDataList.forEach((item, index) => {
                 tbody.innerHTML += `
@@ -5366,6 +5421,7 @@
                         <td class="p-3 font-medium">${item.name || '-'}</td>
                         <td class="p-3">${item.location || '-'}</td>
                         <td class="p-3 text-gray-500 text-xs">${item.gps || '-'}</td>
+                        <td class="p-3 text-center text-gray-600 font-bold">${item.radius || '50'}</td>
                         <td class="p-3 text-center">
                             <button type="button" onclick="editRoutineItem(${index})" class="text-blue-500 hover:text-blue-700 mr-3" title="แก้ไข"><i class="fas fa-edit text-lg"></i></button>
                             <button type="button" onclick="deleteRoutineItem(${index})" class="text-red-500 hover:text-red-700" title="ลบ"><i class="fas fa-trash-alt text-lg"></i></button>
@@ -5380,13 +5436,14 @@
             const location = document.getElementById('r_location').value.trim(); 
             const lat = document.getElementById('r_lat').value.trim();
             const lng = document.getElementById('r_lng').value.trim();
+            const radius = document.getElementById('r_radius').value.trim() || '50';
             const gps = (lat && lng) ? `${lat}, ${lng}` : '-';
             
             const room = 'ทั้งหมด'; const sport = 'ทั้งหมด'; const teacher = '-'; const daysStr = '-';
 
             if(!name || !timeStart || !timeEnd) return showToast("กรุณากรอก รายการกิจวัตร และเวลาเริ่มต้น-สิ้นสุดให้ครบถ้วน", "error");
 
-            const time = `${timeStart} - ${timeEnd}`; const item = { name, days: daysStr, time, location, room, sport, teacher, gps };
+            const time = `${timeStart} - ${timeEnd}`; const item = { name, days: daysStr, time, location, room, sport, teacher, gps, radius };
             const editIndex = parseInt(document.getElementById('r_edit_index').value);
 
             if(editIndex > -1) {
@@ -5428,7 +5485,7 @@
             
             document.getElementById('r_name').value = ''; document.getElementById('r_time_start').value = ''; document.getElementById('r_time_end').value = '';
             document.getElementById('r_location').value = ''; 
-            document.getElementById('r_lat').value = ''; document.getElementById('r_lng').value = '';
+            document.getElementById('r_lat').value = ''; document.getElementById('r_lng').value = ''; document.getElementById('r_radius').value = '50';
         }
 
         function editRoutineItem(index) {
@@ -5446,6 +5503,7 @@
             } else {
                 document.getElementById('r_lat').value = ''; document.getElementById('r_lng').value = '';
             }
+            document.getElementById('r_radius').value = item.radius || '50';
 
             document.getElementById('r_edit_index').value = index; document.getElementById('btn_add_routine').innerHTML = '<i class="fas fa-edit mr-1"></i> ยืนยันการแก้ไขลงตาราง';
             document.getElementById('r_name').scrollIntoView({behavior: 'smooth', block: 'center'});
@@ -5459,7 +5517,7 @@
                     document.getElementById('r_edit_index').value = "-1"; document.getElementById('btn_add_routine').innerHTML = '<i class="fas fa-plus mr-1"></i> เพิ่มลงตารางด้านล่าง';
                     document.getElementById('r_name').value = ''; document.getElementById('r_time_start').value = ''; document.getElementById('r_time_end').value = '';
                     document.getElementById('r_location').value = ''; 
-                    document.getElementById('r_lat').value = ''; document.getElementById('r_lng').value = '';
+                    document.getElementById('r_lat').value = ''; document.getElementById('r_lng').value = ''; document.getElementById('r_radius').value = '50';
                 } else if(editIdx > index) { document.getElementById('r_edit_index').value = editIdx - 1; }
                 renderRoutineTable(); populateRoutineCheckDropdown(); populateTdRoutineDropdown(); populateSdRoutineDropdown(); saveRoutinesToDB(true);
             });
@@ -6056,12 +6114,11 @@
             let totalStudents = 0;
             if(allStudents) {
                 allStudents.forEach(s => {
-                    // ตรวจสอบว่าไม่ใช่แถวว่าง
                     if(s['รหัสประจำตัว'] || s['ชื่อ-สกุล']) totalStudents++; 
                 });
             }
             
-            let leavesToday = 0;
+            let leaveIds = new Set();
             let parts = targetDateStr.split('/');
             if(parts.length === 3) {
                 let tDay = parseInt(parts[0], 10);
@@ -6076,34 +6133,86 @@
                         let endStr = leave['ถึงวันที่'];
                         if(startStr) {
                             let pStart = startStr.split('/');
-                            let dStart = new Date(parseInt(pStart[2])-543, parseInt(pStart[1])-1, parseInt(pStart[0]));
-                            dStart.setHours(0,0,0,0);
-                            
-                            let dEnd = dStart;
-                            if(endStr && endStr !== '-') {
-                                let pEnd = endStr.split('/');
-                                dEnd = new Date(parseInt(pEnd[2])-543, parseInt(pEnd[1])-1, parseInt(pEnd[0]));
-                                dEnd.setHours(23,59,59,999);
-                            } else {
-                                dEnd.setHours(23,59,59,999);
-                            }
-                            
-                            if(targetDateObj >= dStart && targetDateObj <= dEnd) {
-                                // นับจำนวนนักเรียนในแถวการลานั้น
-                                let stList = leave['รหัส/ชื่อนักเรียน'] || leave['นักเรียน'] || '';
-                                if(stList) {
-                                    let count = stList.split(',').length;
-                                    leavesToday += count;
+                            if(pStart.length === 3) {
+                                let dStart = new Date(parseInt(pStart[2])-543, parseInt(pStart[1])-1, parseInt(pStart[0]));
+                                dStart.setHours(0,0,0,0);
+                                
+                                let dEnd = dStart;
+                                if(endStr && endStr !== '-') {
+                                    let pEnd = endStr.split('/');
+                                    if(pEnd.length === 3) {
+                                        dEnd = new Date(parseInt(pEnd[2])-543, parseInt(pEnd[1])-1, parseInt(pEnd[0]));
+                                        dEnd.setHours(23,59,59,999);
+                                    }
+                                } else {
+                                    dEnd.setHours(23,59,59,999);
+                                }
+                                
+                                if(targetDateObj >= dStart && targetDateObj <= dEnd) {
+                                    let stList = leave['รหัส/ชื่อนักเรียน'] || leave['นักเรียน'] || '';
+                                    if(stList) {
+                                        let sts = stList.split(',');
+                                        sts.forEach(s => {
+                                            let sid = s.split('-')[0].trim();
+                                            leaveIds.add(sid);
+                                        });
+                                    }
                                 }
                             }
                         }
                     });
                 }
             }
+            let leavesToday = leaveIds.size;
             
-            let presentStudents = totalStudents - leavesToday;
+            // ดึงข้อมูลเช็คชื่อ "ไม่อยู่" จากชีตกิจวัตรที่มีการเช็คในวันนั้นๆ เพื่อนำมาหักลบ
+            let absentIds = new Set();
+            if (allReportDataCache && allReportDataCache.routineLogs) {
+                 allReportDataCache.routineLogs.forEach(log => {
+                      let rDate = log['วันที่'];
+                      let formattedLogDate = "";
+                      if (rDate) {
+                          if (rDate.indexOf('-') > -1) { 
+                              let dParts = rDate.split(' ')[0].split('-');
+                              if(dParts.length === 3) {
+                                  let y = parseInt(dParts[0], 10);
+                                  if(y < 2400) y += 543;
+                                  formattedLogDate = parseInt(dParts[2], 10) + "/" + parseInt(dParts[1], 10) + "/" + y;
+                              }
+                          } else if (rDate.indexOf('/') > -1) {
+                              let dParts = rDate.split(' ')[0].split('/');
+                              if(dParts.length === 3) {
+                                  let p1 = parseInt(dParts[0], 10);
+                                  let p2 = parseInt(dParts[1], 10);
+                                  let p3 = parseInt(dParts[2], 10);
+                                  let dy, m, y;
+                                  if(p1 > 1000) { y = p1; m = p2; dy = p3; } else { dy = p1; m = p2; y = p3; }
+                                  if(y < 2400) y += 543;
+                                  formattedLogDate = dy + "/" + m + "/" + y;
+                              }
+                          } else {
+                              formattedLogDate = rDate;
+                          }
+                      }
+                      
+                      if (formattedLogDate === targetDateStr || rDate === targetDateStr) {
+                          try {
+                              let records = JSON.parse(log['ข้อมูลการเช็คชื่อ']);
+                              records.forEach(rec => {
+                                  let status = rec.status;
+                                  if (status === 'ไม่อยู่' || status === 'หนี' || status === 'ไม่มา' || status === 'ขาด' || status === 'ไม่ทำเวร' || status === 'ไม่ละหมาด') {
+                                      if (rec.studentId) absentIds.add(String(rec.studentId).trim());
+                                  }
+                              });
+                          } catch(e) {}
+                      }
+                 });
+            }
             
-            // Animation วิ่งตัวเลข (เพื่อความสวยงาม)
+            let totalAbsentOrLeave = new Set([...leaveIds, ...absentIds]);
+            let presentStudents = totalStudents - totalAbsentOrLeave.size;
+            if (presentStudents < 0) presentStudents = 0;
+            
             animateValue("statTotalStudents", 0, totalStudents, 500);
             animateValue("statLeaveStudents", 0, leavesToday, 500);
             animateValue("statPresentStudents", 0, presentStudents, 500);
@@ -6282,13 +6391,16 @@
                 tbody.innerHTML = '';
                 filtered.forEach((st, idx) => {
                     const sportText = st.sportType && st.sportType !== '-' ? st.sportType : (st.studentType === 'ทั่วไป' ? '-' : '');
+                    const prefixText = (st.prefix && st.prefix !== '-') ? st.prefix : '';
+                    const fullNameText = (st.fullName && st.fullName !== '-') ? st.fullName : '';
+                    const displayName = `${prefixText}${fullNameText}`.trim() || '-';
                     tbody.innerHTML += `
                         <tr class="border-b hover:bg-blue-50 border-gray-200">
                             <td class="p-2 text-center text-gray-500 border-r border-gray-200">${idx + 1}</td>
                             <td class="p-2 text-center font-bold text-gray-800 border-r border-gray-200">${st.studentId || '-'}</td>
-                            <td class="p-2 border-r border-gray-200 text-gray-800">${st.prefix || ''}${st.fullName || '-'}</td>
+                            <td class="p-2 border-r border-gray-200 text-gray-800">${displayName}</td>
                             <td class="p-2 text-center border-r border-gray-200 text-gray-800">${st.level || '-'}</td>
-                            <td class="p-2 text-center border-r border-gray-200 text-gray-800">${st.room && st.room !== '-' ? st.room : '-'}</td>
+                            <td class="p-2 text-center border-r border-gray-200 text-gray-800">${st.plan && st.plan !== '-' ? st.plan : '-'}</td>
                             <td class="p-2 text-center text-sm text-gray-600">${sportText}</td>
                         </tr>
                     `;
