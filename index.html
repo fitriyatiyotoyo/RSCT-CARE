@@ -6195,16 +6195,24 @@
                           }
                       }
                       
+                      // หาชื่อกิจวัตรเพื่อเช็คว่าเป็นกิจวัตรหอพักหรือไม่ (ดึงเฉพาะที่มีคำว่า "อยู่หอ")
+                      let routineName = log['กิจวัตร'] || log['รายการกิจวัตร'] || log['รายการ'] || '';
+                      let isDormRoutine = String(routineName).includes('อยู่หอ');
+                      
                       if (formattedLogDate === targetDateStr || rDate === targetDateStr) {
-                          try {
-                              let records = JSON.parse(log['ข้อมูลการเช็คชื่อ']);
-                              records.forEach(rec => {
-                                  let status = rec.status;
-                                  if (status === 'ไม่อยู่' || status === 'หนี' || status === 'ไม่มา' || status === 'ขาด' || status === 'ไม่ทำเวร' || status === 'ไม่ละหมาด') {
-                                      if (rec.studentId) absentIds.add(String(rec.studentId).trim());
-                                  }
-                              });
-                          } catch(e) {}
+                          // กรองเอาเฉพาะข้อมูลเช็คชื่อที่มาจากกิจวัตร "อยู่หอ" เท่านั้น
+                          if (isDormRoutine) {
+                              try {
+                                  let records = JSON.parse(log['ข้อมูลการเช็คชื่อ']);
+                                  records.forEach(rec => {
+                                      let status = rec.status;
+                                      // หักลบเฉพาะสถานะที่ไม่อยู่จริงๆ ในหอพัก (ไม่เอาสถานะขาดเรียน/ไม่ละหมาด มาปน)
+                                      if (status === 'ไม่อยู่' || status === 'หนี') {
+                                          if (rec.studentId) absentIds.add(String(rec.studentId).trim());
+                                      }
+                                  });
+                              } catch(e) {}
+                          }
                       }
                  });
             }
