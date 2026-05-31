@@ -177,6 +177,31 @@
         </div>
     </div>
 
+    <!-- Student Info Modal (เพิ่มใหม่ สำหรับแสดงข้อมูลนักเรียนจากหน้าแจ้งลา) -->
+    <div id="studentInfoModal" class="fixed inset-0 bg-black bg-opacity-60 z-[110] flex items-center justify-center hidden">
+        <div class="bg-white p-6 rounded-xl shadow-2xl max-w-md w-full mx-4 transform transition-all scale-95 opacity-0" id="studentInfoModalBox">
+            <div class="flex justify-between items-center mb-4 border-b pb-2">
+                <h3 class="text-xl font-bold text-gray-800"><i class="fas fa-user-graduate text-rsct-red mr-2"></i> ข้อมูลนักเรียน</h3>
+                <button onclick="closeStudentModal()" class="text-gray-500 hover:text-red-500 text-3xl leading-none">&times;</button>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-4 items-center sm:items-start mb-4">
+                <div class="w-24 h-32 bg-gray-200 rounded border flex items-center justify-center overflow-hidden flex-shrink-0">
+                    <img id="modal_std_image" src="https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png" alt="รูปนักเรียน" class="w-full h-full object-cover">
+                </div>
+                <div class="flex-1 w-full text-sm space-y-2">
+                    <p class="text-lg font-bold text-rsct-dark" id="modal_std_name">กำลังโหลดข้อมูล...</p>
+                    <p class="text-gray-600 font-bold text-rsct-red" id="modal_std_id">-</p>
+                    <p class="text-gray-600"><span class="font-bold">ชั้น/ห้อง:</span> <span id="modal_std_level">-</span></p>
+                    <p class="text-gray-600"><span class="font-bold">ชนิดกีฬา:</span> <span id="modal_std_sport">-</span></p>
+                    <p class="text-gray-600"><span class="font-bold text-blue-700">เบอร์ติดต่อผู้ปกครอง:</span> <span id="modal_std_phone" class="font-medium">-</span></p>
+                </div>
+            </div>
+            <div class="flex justify-end pt-2 border-t border-gray-100">
+                <button onclick="closeStudentModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-6 rounded-lg transition shadow-sm active:scale-95"><i class="fas fa-times mr-1"></i> ปิดหน้าต่าง</button>
+            </div>
+        </div>
+    </div>
+
     <!-- ================= LOGIN SCREEN ================= -->
     <div id="loginScreen" class="fixed inset-0 flex items-center justify-center bg-[url('https://images.unsplash.com/photo-1541339907198-e08756dedf3f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')] bg-cover bg-center z-40">
         <div class="absolute inset-0 bg-black bg-opacity-60"></div>
@@ -303,7 +328,25 @@
                     </div>
 
                     <!-- ส่วนกลาง: ข้อมูลสถิติวันนี้ -->
-                    <h3 class="font-bold text-lg text-gray-800 mb-4"><i class="fas fa-chart-line text-rsct-red mr-2"></i> ข้อมูลนักเรียนประจำวัน</h3>
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
+                        <h3 class="font-bold text-lg text-gray-800"><i class="fas fa-chart-line text-rsct-red mr-2"></i> ข้อมูลนักเรียนประจำวัน</h3>
+                        
+                        <!-- เพิ่มตัวกรองวันที่ -->
+                        <div class="flex flex-wrap items-center gap-2 bg-white p-2 rounded-lg shadow-sm border border-gray-100 w-full md:w-auto">
+                            <select id="dash_date_filter" onchange="handleDashDateFilterChange()" class="border-none bg-gray-50 rounded px-3 py-1.5 text-sm font-semibold text-gray-700 focus:ring-0 cursor-pointer outline-none">
+                                <option value="today">วันนี้</option>
+                                <option value="yesterday">เมื่อวาน</option>
+                                <option value="custom">กำหนดช่วงวันที่...</option>
+                            </select>
+                            <div id="dash_custom_date_div" class="hidden flex items-center gap-2">
+                                <input type="date" id="dash_start_date" class="border rounded px-2 py-1 text-sm text-gray-600 focus:border-rsct-red focus:ring-1 focus:ring-rsct-red outline-none">
+                                <span class="text-gray-400">-</span>
+                                <input type="date" id="dash_end_date" class="border rounded px-2 py-1 text-sm text-gray-600 focus:border-rsct-red focus:ring-1 focus:ring-rsct-red outline-none">
+                            </div>
+                            <button type="button" onclick="updateDashboardStats()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-sm font-bold shadow-sm transition-colors"><i class="fas fa-search mr-1"></i> ค้นหา</button>
+                        </div>
+                    </div>
+
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                         <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-blue-500 flex items-center justify-between transition-transform hover:-translate-y-1">
                             <div>
@@ -314,14 +357,14 @@
                         </div>
                         <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-green-500 flex items-center justify-between transition-transform hover:-translate-y-1">
                             <div>
-                                <h3 class="text-gray-500 text-sm font-bold">อยู่หอพักวันนี้ (คงเหลือ)</h3>
+                                <h3 class="text-gray-500 text-sm font-bold" id="lbl_dash_present">อยู่หอพักวันนี้ (คงเหลือ)</h3>
                                 <p class="text-3xl font-black mt-1 text-green-600"><span id="dash_present_student_val">0</span> <span class="text-sm font-normal text-gray-400">คน</span></p>
                             </div>
                             <div class="w-14 h-14 rounded-full bg-green-50 flex items-center justify-center text-green-500 text-2xl shadow-inner"><i class="fas fa-home"></i></div>
                         </div>
                         <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-red-500 flex items-center justify-between transition-transform hover:-translate-y-1">
                             <div>
-                                <h3 class="text-gray-500 text-sm font-bold">แจ้งลาในวันนี้</h3>
+                                <h3 class="text-gray-500 text-sm font-bold" id="lbl_dash_leave">แจ้งลาในวันนี้</h3>
                                 <p class="text-3xl font-black mt-1 text-red-600"><span id="dash_leave_student_val">0</span> <span class="text-sm font-normal text-gray-400">คน</span></p>
                             </div>
                             <div class="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center text-red-500 text-2xl shadow-inner"><i class="fas fa-user-minus"></i></div>
@@ -1004,30 +1047,35 @@
                             </div>
                             
                             <!-- Display Target Info (เป้าหมายกิจวัตร) -->
-                            <div id="routineTargetInfo" class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg hidden">
-                                <h4 class="font-bold text-blue-800 text-sm mb-2 pb-1 border-b border-blue-200"><i class="fas fa-bullseye mr-1"></i> รายละเอียดเวรและกลุ่มเป้าหมาย:</h4>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-blue-800 mb-2">
-                                    <p><strong><i class="far fa-clock"></i> เวลา:</strong> <span id="r_target_time" class="text-rsct-red"></span></p>
-                                    <p><strong><i class="far fa-calendar-alt"></i> วัน:</strong> <span id="r_target_days"></span></p>
-                                    <p><strong><i class="fas fa-users"></i> ครูเวร:</strong> <span id="r_target_teachers"></span></p>
-                                    <p><strong><i class="fas fa-door-open"></i> ชั้น/ห้อง:</strong> <span id="r_target_room" class="font-bold text-rsct-red"></span></p>
-                                    <p><strong><i class="fas fa-running"></i> กีฬา:</strong> <span id="r_target_sport" class="font-bold text-rsct-red"></span></p>
-                                </div>
-                                <div id="routineTimeLockMsg" class="mt-2 p-2 bg-red-100 text-red-700 rounded border border-red-300 font-bold hidden text-center text-sm">
-                                    <i class="fas fa-lock text-lg mb-1 block"></i> <span id="lockMsgText">หมดเวลาบันทึก หรือไม่อยู่ในวันเวรของคุณ</span>
-                                </div>
-                            </div>
-                            
-                            <!-- เพิ่มกล่องค้นหารายชื่อในตาราง และแสดงกิจวัตรปัจจุบัน -->
-                            <div class="flex flex-col md:flex-row justify-between items-end mb-2 gap-2">
-                                <div id="activeRoutineDisplay" class="font-bold text-lg text-rsct-red hidden bg-red-50 px-4 py-2 rounded-lg border border-red-100 w-full md:w-auto"><i class="fas fa-play-circle mr-1"></i> กิจวัตรปัจจุบัน: -</div>
-                                <div class="relative w-full md:w-64">
-                                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400"><i class="fas fa-search"></i></span>
-                                    <input type="text" id="routineSearchInput" oninput="filterRoutineTable()" placeholder="ค้นหารหัส หรือ ชื่อนักเรียน..." class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-rsct-red focus:ring-1 focus:ring-rsct-red shadow-sm bg-white">
-                                </div>
-                            </div>
+            <div id="routineTargetInfo" class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg hidden">
+                <h4 class="font-bold text-blue-800 text-sm mb-2 pb-1 border-b border-blue-200"><i class="fas fa-bullseye mr-1"></i> รายละเอียดเวรและกลุ่มเป้าหมาย:</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-blue-800 mb-2">
+                    <p><strong><i class="far fa-clock"></i> เวลา:</strong> <span id="r_target_time" class="text-rsct-red"></span></p>
+                    <p><strong><i class="far fa-calendar-alt"></i> วัน:</strong> <span id="r_target_days"></span></p>
+                    <p><strong><i class="fas fa-users"></i> ครูเวร:</strong> <span id="r_target_teachers"></span></p>
+                    <p><strong><i class="fas fa-door-open"></i> ชั้น/ห้อง:</strong> <span id="r_target_room" class="font-bold text-rsct-red"></span></p>
+                    <p><strong><i class="fas fa-running"></i> กีฬา:</strong> <span id="r_target_sport" class="font-bold text-rsct-red"></span></p>
+                </div>
+                <div id="routineTimeLockMsg" class="mt-2 p-2 bg-red-100 text-red-700 rounded border border-red-300 font-bold hidden text-center text-sm">
+                    <i class="fas fa-lock text-lg mb-1 block"></i> <span id="lockMsgText">หมดเวลาบันทึก หรือไม่อยู่ในวันเวรของคุณ</span>
+                </div>
+            </div>
+            
+            <!-- ค้นหาและปุ่มเลือกทั้งหมด -->
+            <div class="flex flex-col md:flex-row justify-between items-end mb-2 gap-2 w-full">
+                <div id="activeRoutineDisplay" class="font-bold text-lg text-rsct-red hidden bg-red-50 px-4 py-2 rounded-lg border border-red-100 w-full md:w-auto"><i class="fas fa-play-circle mr-1"></i> กิจวัตรปัจจุบัน: -</div>
+                <div class="flex flex-col sm:flex-row gap-2 w-full md:w-auto items-center">
+                    <button type="button" id="btnSelectAllNormal" onclick="selectAllNormalStatus()" class="hidden bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow transition active:scale-95 flex items-center justify-center shrink-0 w-full sm:w-auto">
+                        <i class="fas fa-check-double mr-1"></i> เลือกมา/อยู่ ทั้งหมด
+                    </button>
+                    <div class="relative w-full md:w-64">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400"><i class="fas fa-search"></i></span>
+                        <input type="text" id="routineSearchInput" oninput="filterRoutineTable()" placeholder="ค้นหารหัส หรือ ชื่อนักเรียน..." class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-rsct-red focus:ring-1 focus:ring-rsct-red shadow-sm bg-white">
+                    </div>
+                </div>
+            </div>
 
-                            <div class="overflow-x-auto border rounded-lg mb-4">
+            <div class="overflow-x-auto border rounded-lg mb-4">
                                 <table class="w-full text-sm text-left whitespace-nowrap">
                                     <thead class="bg-rsct-dark text-white">
                                         <tr>
@@ -1114,6 +1162,13 @@
                                 <input type="hidden" name="c_teacher" id="hidden_c_teacher">
                             </div>
                             
+                            <!-- ปุ่มเลือกทั้งหมด (เพิ่มใหม่) -->
+                            <div class="flex justify-end mb-2 w-full">
+                                <button type="button" id="btnSelectAllClass" onclick="selectAllClassStatus()" class="hidden bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow transition active:scale-95 flex items-center justify-center w-full md:w-auto">
+                                    <i class="fas fa-check-double mr-1"></i> เลือกมาเรียน ทั้งหมด
+                                </button>
+                            </div>
+
                             <!-- พื้นที่จำลองรายชื่อนักเรียน -->
                             <div class="overflow-x-auto mb-4 border rounded">
                                 <table class="w-full text-sm text-left whitespace-nowrap">
@@ -1475,7 +1530,27 @@
                                     <div><label class="block text-sm font-bold text-rsct-dark mb-1">จำนวนวันลา (วัน)</label><input type="number" name="l_days" id="leaveDaysCount" class="w-full border rounded p-2 focus:ring-1 focus:ring-rsct-red" min="1" max="365" value="1" required oninput="calcLeaveEndDate()"></div>
                                 </div>
                                 <div class="md:col-span-2"><label class="block text-sm font-bold text-rsct-dark mb-1">สาเหตุการลา</label><textarea name="l_reason" class="w-full border rounded p-2 focus:ring-1 focus:ring-rsct-red" rows="2" placeholder="ระบุเหตุผล..." required></textarea></div>
+                                
+                                <!-- ข้อมูลเพิ่มเติม: ผู้บันทึก, เบอร์ติดต่อผู้ปกครอง, ที่อยู่ -->
+                                <div class="md:col-span-2 border-t pt-4 border-gray-200 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-bold text-rsct-dark mb-1">ชื่อผู้บันทึกรายการ</label>
+                                        <div class="relative">
+                                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500"><i class="fas fa-user-edit"></i></span>
+                                            <input type="text" name="l_recorder" id="leaveRecorder" class="w-full pl-10 pr-3 py-2 border rounded bg-gray-200 text-gray-700 font-bold focus:outline-none" readonly title="ระบบดึงข้อมูลอัตโนมัติจากผู้เข้าสู่ระบบ">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-bold text-rsct-dark mb-1">เบอร์ติดต่อผู้ปกครอง</label>
+                                        <input type="tel" name="l_parent_phone" class="w-full border rounded p-2 focus:ring-1 focus:ring-rsct-red" placeholder="เช่น 0812345678" required>
+                                    </div>
+                                    <div class="md:col-span-2">
+                                        <label class="block text-sm font-bold text-rsct-dark mb-1">ที่อยู่ที่สามารถติดต่อได้ช่วงลา</label>
+                                        <textarea name="l_contact_address" class="w-full border rounded p-2 focus:ring-1 focus:ring-rsct-red" rows="2" placeholder="บ้านเลขที่ หมู่ที่ ตำบล อำเภอ จังหวัด..." required></textarea>
+                                    </div>
+                                </div>
                             </div>
+
                             <div class="mt-4 flex flex-col md:flex-row gap-3">
                                 <button type="submit" class="bg-rsct-red text-white px-8 py-3 rounded-lg shadow-lg hover:bg-red-700 font-bold transition w-full md:w-auto active:scale-95"><i class="fas fa-save mr-1"></i> บันทึกข้อมูลการลา</button>
                                 <button type="button" onclick="resetLeaveForm()" class="bg-gray-500 text-white px-8 py-3 rounded-lg shadow-lg hover:bg-gray-600 font-bold transition w-full md:w-auto active:scale-95"><i class="fas fa-sync-alt mr-1"></i> ล้างข้อมูล / เริ่มใหม่</button>
@@ -1487,7 +1562,7 @@
                             <h3 class="font-bold text-lg mb-4 text-rsct-dark"><i class="fas fa-history text-rsct-red mr-2"></i> ประวัติการแจ้งลาล่าสุด</h3>
                             <div class="overflow-x-auto border rounded-lg shadow-sm">
                                 <table class="w-full text-sm text-left whitespace-nowrap" id="leaveHistoryTable">
-                                    <thead class="bg-gray-100 text-gray-700 border-b border-gray-200">
+                                    <thead>
                                         <tr>
                                             <th class="p-3 border-r w-32">วันที่บันทึก</th>
                                             <th class="p-3 border-r w-40 text-center">ช่วงวันที่ลา</th>
@@ -1495,12 +1570,13 @@
                                             <th class="p-3 border-r w-24 text-center">ประเภทลา</th>
                                             <th class="p-3 border-r text-center w-20">จำนวนวัน</th>
                                             <th class="p-3 border-r">สาเหตุ</th>
+                                            <th class="p-3 border-r text-center w-24">ผู้บันทึก</th>
                                             <th class="p-3 border-r text-center w-24">สถานะการอนุมัติ</th>
-                                            <th class="p-3 text-center w-24">จัดการ</th>
+                                            <th class="p-3 text-center w-24" id="th_leave_action">จัดการ</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <tr><td colspan="8" class="p-8 text-center text-gray-500">กรุณารอสักครู่...</td></tr>
+                                        <tr><td colspan="9" class="p-8 text-center text-gray-500">กรุณารอสักครู่...</td></tr>
                                     </tbody>
                                 </table>
                             </div>
@@ -1970,30 +2046,54 @@
     <div class="bg-white rounded-xl shadow p-6 mb-6">
         <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2"><i class="fas fa-chart-pie mr-2 text-red-600"></i> รายงานสรุปการเช็คชื่อ & สถิติหอพัก</h2>
         
-        <!-- ฟอร์มตัวกรองรายงาน -->
-        <div class="bg-gray-50 p-5 rounded-xl border border-gray-200 mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-                <label class="block text-sm font-bold text-gray-800 mb-1">เลือกวันที่</label>
-                <input type="date" id="reportFilterDate" class="w-full px-3 py-2 border rounded-lg focus:ring-1 focus:ring-red-500" onchange="loadReportOptions()">
+        <!-- 1. เลือกประเภทการรายงาน (แยกออกมาด้านบนสุด) -->
+        <div class="bg-blue-50 p-5 rounded-xl border border-blue-200 mb-6">
+            <label class="block text-md font-bold text-blue-900 mb-2"><i class="fas fa-filter mr-1"></i> 1. เลือกประเภทการรายงาน</label>
+            <select id="reportFilterType" class="w-full md:w-1/2 px-4 py-3 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-bold text-blue-800 bg-white shadow-sm" onchange="handleReportTypeChange()">
+                <option value="">-- เลือกประเภทรายงานที่ต้องการดู --</option>
+                <option value="routine">รายงาน: เช็คชื่อกิจกรรม/กิจวัตรประจำวัน</option>
+                <option value="class">รายงาน: เช็คชื่อเข้าเรียน (รายวิชา)</option>
+                <!-- เพิ่มตัวเลือกรายงานตรวจสอบครู ซ่อนไว้เป็นค่าเริ่มต้น -->
+                <option value="teacher_entry" class="hidden text-red-600" id="optReportTeacherEntry">รายงาน: ตรวจสอบการบันทึกของครู (เฉพาะแอดมิน/ผู้บริหาร)</option>
+            </select>
+        </div>
+
+        <!-- คอนเทนเนอร์สำหรับฟอร์มย่อย (ซ่อนไว้จนกว่าจะเลือกประเภท) -->
+        <div id="reportDynamicFormContainer" class="hidden">
+            <div class="bg-gray-50 p-5 rounded-xl border border-gray-200 mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div id="reportItemFilterContainer">
+                    <label class="block text-sm font-bold text-gray-800 mb-1">2. เลือกรายการที่ต้องการดู</label>
+                    <select id="reportFilterItem" onchange="handleReportItemChange()" class="w-full px-3 py-2 border rounded-lg focus:ring-1 focus:ring-red-500 font-semibold text-blue-700 bg-white">
+                        <option value="">-- กำลังโหลดข้อมูล... --</option>
+                    </select>
+                </div>
+                <div class="md:col-span-2 opacity-50 pointer-events-none transition-opacity" id="reportDateFilterContainer">
+                    <label class="block text-sm font-bold text-gray-800 mb-1">3. เลือกช่วงวันที่</label>
+                    <div class="flex flex-col sm:flex-row gap-2">
+                        <select id="report_date_filter" onchange="handleReportDateFilterChange()" class="w-full sm:w-1/3 px-3 py-2 border rounded-lg focus:ring-1 focus:ring-red-500 font-semibold text-gray-700 bg-white">
+                            <option value="today">วันนี้</option>
+                            <option value="yesterday">เมื่อวาน</option>
+                            <option value="custom">กำหนดช่วงวันที่...</option>
+                        </select>
+                        <div id="report_custom_date_div" class="hidden flex-1 flex items-center gap-2 w-full sm:w-2/3">
+                            <input type="date" id="report_start_date" class="w-full px-2 py-2 border rounded-lg text-sm focus:ring-1 focus:ring-red-500 bg-white">
+                            <span class="text-gray-400 font-bold">-</span>
+                            <input type="date" id="report_end_date" class="w-full px-2 py-2 border rounded-lg text-sm focus:ring-1 focus:ring-red-500 bg-white">
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-end opacity-50 pointer-events-none transition-opacity" id="reportSubmitContainer">
+                    <button onclick="generateDetailedReport()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow transition active:scale-95">
+                        <i class="fas fa-search mr-2"></i> เรียกดูรายงาน
+                    </button>
+                </div>
             </div>
-            <div>
-                <label class="block text-sm font-bold text-gray-800 mb-1">ประเภทการรายงาน</label>
-                <select id="reportFilterType" class="w-full px-3 py-2 border rounded-lg focus:ring-1 focus:ring-red-500" onchange="loadReportOptions()">
-                    <option value="routine">เช็คชื่อกิจกรรม/กิจวัตรประจำวัน</option>
-                    <option value="class">เช็คชื่อเข้าเรียน (รายวิชา)</option>
-                </select>
-            </div>
-            <div>
-                <label class="block text-sm font-bold text-gray-800 mb-1">เลือกรายการที่ต้องการดู</label>
-                <select id="reportFilterItem" class="w-full px-3 py-2 border rounded-lg focus:ring-1 focus:ring-red-500 font-semibold text-blue-700">
-                    <option value="">-- กรุณาเลือกวันที่ก่อน --</option>
-                </select>
-            </div>
-            <div class="flex items-end">
-                <button onclick="generateDetailedReport()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow transition active:scale-95">
-                    <i class="fas fa-search mr-2"></i> เรียกดูรายงาน
-                </button>
-            </div>
+        </div>
+
+        <!-- ข้อความแจ้งเตือนเมื่อไม่พบข้อมูล -->
+        <div id="reportEmptyMessage" class="hidden bg-yellow-50 border border-yellow-200 text-yellow-700 px-6 py-8 rounded-xl mb-6 text-center shadow-sm">
+            <i class="fas fa-exclamation-triangle text-4xl mb-3 text-yellow-500 block"></i>
+            <span class="text-lg font-bold">ไม่พบรายละเอียดการเช็คชื่อสำหรับรายการนี้</span>
         </div>
 
         <!-- การ์ดสรุปสถานะ (โชว์เมื่อกดค้นหา) -->
@@ -2344,6 +2444,9 @@
             if(!tbody) return;
             tbody.innerHTML = '';
             
+            // เพิ่มตัวแปรเช็คว่ามีข้อมูลสิทธิ์ที่โหลดมาจากฐานข้อมูลแล้วหรือไม่
+            const hasSavedPermissions = Object.keys(systemPermissions).length > 0;
+            
             menus.forEach(menu => {
                 const tr = document.createElement('tr');
                 tr.className = 'border-b hover:bg-gray-50';
@@ -2354,8 +2457,20 @@
                 
                 const roles = ["ครูหอพัก", "ครูวิชาการ", "แม่ครัว", "ผู้บริหาร", "สนับสนุน"];
                 roles.forEach(role => {
-                    let checked = (role === "ผู้บริหาร" || role === "สนับสนุน") ? "checked" : "";
-                    if(menu === "หน้าหลัก") checked = "checked"; 
+                    let checked = "";
+                    
+                    if (hasSavedPermissions) {
+                        // ถ้ามีข้อมูลที่บันทึกไว้แล้ว ให้นำมาตรวจสอบเพื่อติ๊กถูก
+                        const allowedRoles = systemPermissions[menu] || [];
+                        if (allowedRoles.includes(role)) {
+                            checked = "checked";
+                        }
+                    } else {
+                        // กรณีที่ยังไม่มีข้อมูลการตั้งค่า (ค่าเริ่มต้น)
+                        checked = (role === "ผู้บริหาร" || role === "สนับสนุน") ? "checked" : "";
+                        if(menu === "หน้าหลัก") checked = "checked"; 
+                    }
+                    
                     html += `<td class="p-2"><input type="checkbox" class="accent-rsct-red w-4 h-4 perm-cb" value="${role}" ${checked}></td>`;
                 });
                 
@@ -2651,6 +2766,23 @@
             // รอให้ผู้ใช้กดปุ่ม "ดึงรายชื่อ" เอง
             tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-gray-400"><i class="fas fa-hand-pointer text-2xl mb-2 block"></i> กรุณาตรวจสอบรายละเอียดวิชา แล้วกดปุ่ม "ดึงรายชื่อนักเรียน" หรือ "แก้ไขข้อมูลเดิม"</td></tr>`;
             btnSave.classList.add('hidden');
+            
+            const btnSelectAll = document.getElementById('btnSelectAllClass');
+            if(btnSelectAll) btnSelectAll.classList.add('hidden');
+
+            // ตรวจสอบว่าเคยบันทึกในคาบนี้ของวันนี้ไปแล้วหรือยัง
+            const classDate = document.getElementById('classDate').value;
+            const saveKey = `rsct_saved_class_${currentUserName}_${classDate}_${item.period}_${item.subjectCode}`;
+            const isAlreadySaved = localStorage.getItem(saveKey) === 'true';
+            
+            const btnLoadNew = document.getElementById('btnLoadNewClassCheck');
+            if (btnLoadNew) {
+                if (isAlreadySaved) {
+                    btnLoadNew.classList.add('hidden'); // ซ่อนถ้าเคยเซฟแล้ว
+                } else {
+                    btnLoadNew.classList.remove('hidden'); // แสดงถ้ายังไม่เคยเซฟ
+                }
+            }
         }
 
         function loadStudentsForClassCheck() {
@@ -2728,7 +2860,7 @@
                         const leaveType = getStudentLeaveType(st.studentId, classDate);
                         const isLeave = !!leaveType;
                         
-                        const chkHere = !isLeave ? 'checked' : '';
+                        const chkHere = ''; // เอาติ๊กอัตโนมัติออก ให้ครูเลือกเอง
                         const chkSick = leaveType === 'ลาป่วย' ? 'checked' : '';
                         const chkPersonal = (leaveType === 'ลากิจ' || leaveType === 'ลากลับบ้าน') ? 'checked' : '';
                         const chkSport = (leaveType === 'แข่งขันกีฬา' || leaveType === 'ลาแข่งขัน') ? 'checked' : '';
@@ -2765,6 +2897,9 @@
                     
                     document.getElementById('btnSaveClassCheck').classList.remove('hidden');
                     document.getElementById('btnSaveClassCheck').innerHTML = '<i class="fas fa-save mr-2"></i> บันทึกข้อมูลการเข้าเรียน';
+                    
+                    const btnSelectAll = document.getElementById('btnSelectAllClass');
+                    if(btnSelectAll) btnSelectAll.classList.remove('hidden');
                     
                     showToast(`ดึงรายชื่อนักเรียน ${sortedStudents.length} คนสำเร็จ`, 'success');
                 }, true);
@@ -2836,6 +2971,9 @@
                     document.getElementById('btnSaveClassCheck').classList.remove('hidden');
                     document.getElementById('btnSaveClassCheck').innerHTML = '<i class="fas fa-edit mr-2"></i> บันทึกแทนที่ข้อมูลเดิม';
                     
+                    const btnSelectAll = document.getElementById('btnSelectAllClass');
+                    if(btnSelectAll) btnSelectAll.classList.remove('hidden');
+                    
                     showToast(`ดึงข้อมูลที่เคยบันทึกไว้จำนวน ${res.data.length} คนสำเร็จ (อยู่ในโหมดแก้ไข)`, 'success');
                 } else {
                     showToast('ไม่พบข้อมูลการเช็คชื่อที่เคยบันทึกไว้ในคาบนี้', 'error');
@@ -2901,10 +3039,57 @@
                     document.getElementById('classCheckTableBody').innerHTML = `<tr><td colspan="5" class="p-8 text-center text-gray-400"><i class="fas fa-check-circle text-2xl mb-2 text-green-500 block"></i> บันทึกข้อมูลเรียบร้อยแล้ว<br>กรุณาเลือกรายวิชาอื่นเพื่อทำรายการต่อ</td></tr>`;
                     document.getElementById('btnSaveClassCheck').classList.add('hidden');
                     if(isUpdateInput) isUpdateInput.value = 'false';
+                    
+                    const btnSelectAll = document.getElementById('btnSelectAllClass');
+                    if(btnSelectAll) btnSelectAll.classList.add('hidden');
+
+                    // บันทึกสถานะว่าคาบนี้ของวันนี้ถูกบันทึกแล้ว
+                    const subjectCodeParts = document.getElementById('hidden_c_subject').value.split(' ');
+                    const sCodeOnly = subjectCodeParts[0]; 
+                    const saveKey = `rsct_saved_class_${currentUserName}_${document.getElementById('classDate').value}_${document.getElementById('hidden_c_period').value}_${sCodeOnly}`;
+                    localStorage.setItem(saveKey, 'true');
+
+                    // ซ่อนปุ่มดึงรายชื่อใหม่
+                    const btnLoadNew = document.getElementById('btnLoadNewClassCheck');
+                    if(btnLoadNew) btnLoadNew.classList.add('hidden');
+
                 } else {
                     showToast("เกิดข้อผิดพลาด: " + (res.message || "การเชื่อมต่อล้มเหลว"), "error");
                 }
             });
+        }
+
+        // เพิ่มฟังก์ชันเลือกมาเรียนทั้งหมด
+        function selectAllClassStatus() {
+            const tbody = document.getElementById('classCheckTableBody');
+            if(!tbody) return;
+            
+            let count = 0;
+            const rows = tbody.querySelectorAll('tr');
+            
+            rows.forEach(tr => {
+                if(tr.cells.length < 5) return; 
+                
+                const radios = tr.querySelectorAll('input[type="radio"]');
+                let hasLeave = false;
+                
+                radios.forEach(r => {
+                    if(r.checked && ['ลาป่วย', 'ลากิจ', 'ลากลับบ้าน', 'ลาแข่งขัน', 'แข่งขันกีฬา'].includes(r.value)) {
+                        hasLeave = true;
+                    }
+                });
+                
+                if(!hasLeave) {
+                    const radioMa = tr.querySelector('input[type="radio"][value="มา"]');
+                    if (radioMa && !radioMa.closest('label').classList.contains('pointer-events-none')) {
+                        radioMa.checked = true;
+                        count++;
+                    }
+                }
+            });
+            
+            if(count > 0) showToast(`เลือกสถานะมาเรียนให้ ${count} คน สำเร็จ`, 'success');
+            else showToast('ไม่มีรายชื่อที่สามารถอัปเดตได้ (ลา หรือล็อคอยู่)', 'info');
         }
 
         // ================= สคริปต์ควบคุมการแสดงเมนูตามสิทธิ์ =================
@@ -2943,6 +3128,17 @@
                     item.style.display = 'none'; // ซ่อนเมนูหากไม่มีสิทธิ์
                 }
             });
+            
+            // --- เพิ่มเติม: ซ่อน/แสดง ตัวเลือกรายงานตรวจสอบของครู ---
+            const optReportTeacherEntry = document.getElementById('optReportTeacherEntry');
+            if (optReportTeacherEntry) {
+                if (currentUserRole === 'ผู้ดูแลระบบ' || currentUserRole === 'ผู้บริหาร') {
+                    optReportTeacherEntry.classList.remove('hidden');
+                } else {
+                    optReportTeacherEntry.classList.add('hidden');
+                }
+            }
+            // ---------------------------------------------
             
             // หากหน้าปัจจุบันถูกซ่อน ให้เด้งกลับไปหน้าแรก
             const activeSection = document.querySelector('.page-section.active');
@@ -3014,10 +3210,21 @@
             }
 
             if(pageId === 'page-report') {
-                if(!document.getElementById('reportFilterDate').value) {
-                    document.getElementById('reportFilterDate').valueAsDate = new Date();
+                if(document.getElementById('report_date_filter')) {
+                    if(!document.getElementById('report_start_date').value) document.getElementById('report_start_date').valueAsDate = new Date();
+                    if(!document.getElementById('report_end_date').value) document.getElementById('report_end_date').valueAsDate = new Date();
+                    handleReportDateFilterChange();
+                } else {
+                    if(!document.getElementById('reportFilterDate').value) {
+                        document.getElementById('reportFilterDate').valueAsDate = new Date();
+                    }
                 }
-                loadReportOptions();
+                
+                const typeEl = document.getElementById('reportFilterType');
+                if(typeEl) {
+                    typeEl.value = ''; // รีเซ็ตค่าเพื่อบังคับให้ผู้ใช้เริ่มตามขั้นตอนใหม่
+                    handleReportTypeChange();
+                }
             }
         }
 
@@ -3360,44 +3567,77 @@
             updateDashboardStats();
         }
 
+        // ฟังก์ชันควบคุมการซ่อน/แสดงช่องเลือกวันที่
+        function handleDashDateFilterChange() {
+            const filter = document.getElementById('dash_date_filter').value;
+            const customDiv = document.getElementById('dash_custom_date_div');
+            if (filter === 'custom') {
+                customDiv.classList.remove('hidden');
+                document.getElementById('dash_start_date').valueAsDate = new Date();
+                document.getElementById('dash_end_date').valueAsDate = new Date();
+            } else {
+                customDiv.classList.add('hidden');
+                updateDashboardStats(); // โหลดข้อมูลทันทีเมื่อเปลี่ยนเป็น วันนี้/เมื่อวาน
+            }
+        }
+
         function updateDashboardStats() {
             fetchAllStudents(function() {
                 fetchAllLeaves(function() {
                     let totalStudents = masterStudentData ? masterStudentData.length : 0;
-                    let todayObj = new Date();
-                    todayObj.setHours(0,0,0,0);
                     
-                    let targetDateStr = `${todayObj.getDate()}/${todayObj.getMonth() + 1}/${todayObj.getFullYear() + 543}`;
-                    let leaveIds = new Set();
+                    // --- ประมวลผลวันที่ตามตัวกรอง ---
+                    const filterType = document.getElementById('dash_date_filter') ? document.getElementById('dash_date_filter').value : 'today';
+                    let dStart = new Date(); dStart.setHours(0,0,0,0);
+                    let dEnd = new Date(); dEnd.setHours(23,59,59,999);
 
+                    if (filterType === 'yesterday') {
+                        dStart.setDate(dStart.getDate() - 1);
+                        dEnd.setDate(dEnd.getDate() - 1);
+                    } else if (filterType === 'custom') {
+                        const sVal = document.getElementById('dash_start_date').value;
+                        const eVal = document.getElementById('dash_end_date').value;
+                        if (sVal) dStart = new Date(sVal);
+                        else document.getElementById('dash_start_date').valueAsDate = dStart;
+                        
+                        if (eVal) { dEnd = new Date(eVal); dEnd.setHours(23,59,59,999); } 
+                        else { dEnd = new Date(dStart); dEnd.setHours(23,59,59,999); document.getElementById('dash_end_date').valueAsDate = dEnd; }
+                    }
+
+                    // สร้าง Array ช่วงวันที่รูปแบบ String (DD/MM/YYYY) เพื่อส่งไปดึงหลังบ้าน
+                    let dateStrings = [];
+                    let tempDate = new Date(dStart);
+                    while(tempDate <= dEnd) {
+                        let tDateStr = `${tempDate.getDate()}/${tempDate.getMonth() + 1}/${tempDate.getFullYear() + 543}`;
+                        dateStrings.push(tDateStr);
+                        tempDate.setDate(tempDate.getDate() + 1);
+                    }
+
+                    // --- คำนวณผู้ที่ลาระหว่างช่วงวันที่เลือก ---
+                    let leaveIds = new Set();
                     if(masterLeaveData) {
                         masterLeaveData.forEach(leave => {
-                            let startStr = leave.startDate;
-                            let endStr = leave.endDate;
-                            if(startStr && startStr !== '-') {
-                                let pStart = startStr.split('/');
+                            let lStartStr = leave.startDate;
+                            let lEndStr = leave.endDate;
+                            if(lStartStr && lStartStr !== '-') {
+                                let pStart = lStartStr.split('/');
                                 if(pStart.length === 3) {
-                                    let dStart = new Date(parseInt(pStart[2])-543, parseInt(pStart[1])-1, parseInt(pStart[0]));
-                                    dStart.setHours(0,0,0,0);
-                                    let dEnd = dStart;
-                                    if(endStr && endStr !== '-') {
-                                        let pEnd = endStr.split('/');
-                                        if(pEnd.length === 3) {
-                                            dEnd = new Date(parseInt(pEnd[2])-543, parseInt(pEnd[1])-1, parseInt(pEnd[0]));
-                                            dEnd.setHours(23,59,59,999);
-                                        }
-                                    } else {
-                                        dEnd.setHours(23,59,59,999);
-                                    }
+                                    let leaveStart = new Date(parseInt(pStart[2])-543, parseInt(pStart[1])-1, parseInt(pStart[0]));
+                                    leaveStart.setHours(0,0,0,0);
+                                    let leaveEnd = leaveStart;
                                     
-                                    if(todayObj >= dStart && todayObj <= dEnd) {
+                                    if(lEndStr && lEndStr !== '-') {
+                                        let pEnd = lEndStr.split('/');
+                                        if(pEnd.length === 3) leaveEnd = new Date(parseInt(pEnd[2])-543, parseInt(pEnd[1])-1, parseInt(pEnd[0]));
+                                    }
+                                    leaveEnd.setHours(23,59,59,999);
+                                    
+                                    // ถ้าระยะเวลาลา คร่อม หรือ ชน กับช่วงที่ฟิลเตอร์ (Overlap Logic)
+                                    if(leaveStart <= dEnd && leaveEnd >= dStart) {
                                         let stList = leave.student;
                                         if(stList) {
                                             let sts = stList.split(',');
-                                            sts.forEach(s => {
-                                                let sid = s.split('-')[0].trim();
-                                                leaveIds.add(sid);
-                                            });
+                                            sts.forEach(s => leaveIds.add(s.split('-')[0].trim()));
                                         }
                                     }
                                 }
@@ -3405,26 +3645,35 @@
                         });
                     }
 
-                    // ดึงข้อมูลการเช็คชื่อกิจวัตรของวันนี้ (เช่น ไม่อยู่/หนี) มาหักลบด้วยเพื่อให้ยอดคงเหลือตรงตามจริง
-                    sendJSONP('getDailyDormStats', { targetDate: targetDateStr }, function(res) {
+                    // --- ดึงข้อมูลเช็คชื่อหอพัก (ไม่อยู่/หนี) โดยส่งลิสต์วันที่ไป ---
+                    sendJSONP('getDailyDormStats', { targetDate: JSON.stringify(dateStrings) }, function(res) {
                         let absentIds = new Set();
                         if (res.status === 'success' && res.data && res.data.absentIds) {
                             res.data.absentIds.forEach(id => absentIds.add(id));
                         }
                         
-                        let leavesToday = leaveIds.size;
+                        let leavesCount = leaveIds.size;
                         let totalAbsentOrLeave = new Set([...leaveIds, ...absentIds]);
                         
                         let presentStudents = totalStudents - totalAbsentOrLeave.size;
                         if (presentStudents < 0) presentStudents = 0;
                         
+                        // ปรับข้อความ Label ตามตัวกรอง
+                        let lblPresent = document.getElementById('lbl_dash_present');
+                        let lblLeave = document.getElementById('lbl_dash_leave');
+                        if (lblPresent && lblLeave) {
+                            if (filterType === 'today') { lblPresent.innerText = "อยู่หอพักวันนี้ (คงเหลือ)"; lblLeave.innerText = "แจ้งลาในวันนี้"; }
+                            else if (filterType === 'yesterday') { lblPresent.innerText = "อยู่หอพักเมื่อวาน (คงเหลือ)"; lblLeave.innerText = "แจ้งลาเมื่อวาน"; }
+                            else { lblPresent.innerText = "อยู่หอพักในช่วงเวลา (เฉลี่ย)"; lblLeave.innerText = "ผู้ที่ลาระหว่างช่วงเวลา"; }
+                        }
+
+                        // แสดงผลตัวเลขพร้อมแอนิเมชัน
                         const elTotal = document.getElementById("dash_total_student_val");
-                        const elPresent = document.getElementById("dash_present_student_val");
-                        const elLeave = document.getElementById("dash_leave_student_val");
-                        
-                        if(elTotal) animateValue("dash_total_student_val", 0, totalStudents, 800);
-                        if(elPresent) animateValue("dash_present_student_val", 0, presentStudents, 800);
-                        if(elLeave) animateValue("dash_leave_student_val", 0, leavesToday, 800);
+                        if(elTotal) {
+                            animateValue("dash_total_student_val", 0, totalStudents, 800);
+                            animateValue("dash_present_student_val", 0, presentStudents, 800);
+                            animateValue("dash_leave_student_val", 0, leavesCount, 800);
+                        }
                     });
                 });
             }, false); 
@@ -3803,12 +4052,22 @@
                 if(btnLoad) { btnLoad.disabled = true; btnLoad.classList.add('opacity-50', 'cursor-not-allowed'); btnLoad.classList.remove('hidden'); }
                 if(btnLoadSaved) { btnLoadSaved.disabled = true; btnLoadSaved.classList.add('opacity-50', 'cursor-not-allowed'); }
                 if(btnSave) { btnSave.classList.add('hidden'); }
+                const btnSelectAll = document.getElementById('btnSelectAllNormal');
+                if(btnSelectAll) btnSelectAll.classList.add('hidden');
                 if(tbody) tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-gray-400"><i class="fas fa-info-circle text-2xl mb-2 block"></i> กรุณาเลือกกิจวัตรและวันที่ จากนั้นกดปุ่มเพื่อดึงข้อมูล</td></tr>`;
                 return;
             }
 
             const targetDuty = teacherDutyList[parseInt(indexStr)];
             if(!targetDuty) return;
+
+            // แสดงกล่องข้อมูลรายละเอียดของกิจวัตรที่ถูกเลือก
+            infoDiv.classList.remove('hidden');
+            document.getElementById('r_target_time').innerText = targetDuty.time || '-';
+            document.getElementById('r_target_days').innerText = targetDuty.days || '-';
+            document.getElementById('r_target_teachers').innerText = targetDuty.teachers || '-';
+            document.getElementById('r_target_room').innerText = targetDuty.room || 'ทั้งหมด';
+            document.getElementById('r_target_sport').innerText = targetDuty.sport || 'ทั้งหมด';
 
             const selectedDate = new Date(dateVal);
             let isLocked = false;
@@ -3852,44 +4111,85 @@
                 }
             }
 
-            infoDiv.classList.remove('hidden');
-            document.getElementById('r_target_time').innerText = targetDuty.time || '-';
-            document.getElementById('r_target_days').innerText = targetDuty.days || '-';
-            document.getElementById('r_target_teachers').innerText = targetDuty.teachers || '-';
-            document.getElementById('r_target_room').innerText = targetDuty.room || 'ทั้งหมด';
-            document.getElementById('r_target_sport').innerText = targetDuty.sport || 'ทั้งหมด';
-
+            // จัดการการแสดงผล UI เมื่อถูกล็อค/ไม่ถูกล็อค
             if (isLocked) {
+                if(lockMsg) {
+                    lockMsg.classList.remove('hidden');
+                    if(lockText) lockText.innerText = reason;
+                }
                 if(activeDisplay) activeDisplay.classList.add('hidden');
-                if(lockMsg) lockMsg.classList.remove('hidden');
-                if(lockText) lockText.innerText = reason;
-                if(btnLoad) { btnLoad.disabled = true; btnLoad.classList.add('opacity-50', 'cursor-not-allowed'); btnLoad.classList.remove('hidden'); }
+                if(btnLoad) { btnLoad.disabled = true; btnLoad.classList.add('opacity-50', 'cursor-not-allowed'); }
                 if(btnLoadSaved) { btnLoadSaved.disabled = true; btnLoadSaved.classList.add('opacity-50', 'cursor-not-allowed'); }
                 if(btnSave) { btnSave.classList.add('hidden'); }
+                const btnSelectAll = document.getElementById('btnSelectAllNormal');
+                if(btnSelectAll) btnSelectAll.classList.add('hidden');
                 if(tbody) tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-red-500"><i class="fas fa-lock text-2xl mb-2 block"></i> ${reason}</td></tr>`;
             } else {
-                if(activeDisplay) {
-                    activeDisplay.innerHTML = `<i class="fas fa-play-circle mr-1"></i> กิจวัตรปัจจุบัน: ${targetDuty.routine} <span class="text-sm font-normal text-gray-500 ml-2">(${targetDuty.time})</span>`;
-                    activeDisplay.classList.remove('hidden');
-                }
                 if(lockMsg) lockMsg.classList.add('hidden');
+                if(activeDisplay) {
+                    activeDisplay.classList.remove('hidden');
+                    activeDisplay.innerHTML = `<i class="fas fa-play-circle mr-1"></i> กิจวัตรปัจจุบัน: ${targetDuty.routine}`;
+                }
                 
-                // ตรวจสอบจาก LocalStorage ว่าครูคนนี้เคยบันทึกกิจวัตรของวันนี้ไปแล้วหรือยัง
+                // ตรวจสอบว่าเคยบันทึกในวันนี้/กิจวัตรนี้ไปแล้วหรือยัง
                 const saveKey = `rsct_saved_routine_${currentUserName}_${dateVal}_${targetDuty.routine}`;
-                const hasSaved = localStorage.getItem(saveKey) === 'true';
+                const isAlreadySaved = localStorage.getItem(saveKey) === 'true';
 
                 if(btnLoad) { 
                     btnLoad.disabled = false; 
                     btnLoad.classList.remove('opacity-50', 'cursor-not-allowed'); 
-                    if (hasSaved) {
-                        btnLoad.classList.add('hidden'); // หากเคยบันทึกในวันนี้แล้ว ให้ซ่อนปุ่มดึงรายชื่อใหม่
+                    if(isAlreadySaved) {
+                        btnLoad.classList.add('hidden'); // ซ่อนปุ่มดึงรายชื่อใหม่ ถ้าเคยเซฟแล้ว
                     } else {
-                        btnLoad.classList.remove('hidden'); // หากเป็นวันอื่น หรือเปลี่ยนวิชา ให้แสดงปุ่มกลับมา
+                        btnLoad.classList.remove('hidden'); // แสดงถ้ายังไม่เคยเซฟ
                     }
                 }
                 if(btnLoadSaved) { btnLoadSaved.disabled = false; btnLoadSaved.classList.remove('opacity-50', 'cursor-not-allowed'); }
-                if(btnSave) { btnSave.classList.remove('hidden'); }
-                if(tbody) tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-gray-400"><i class="fas fa-info-circle text-2xl mb-2 block"></i> กรุณากดปุ่มเพื่อดึงรายชื่อ</td></tr>`;
+                if(btnSave) { btnSave.classList.add('hidden'); } // ซ่อนปุ่มบันทึกไว้ก่อนจนกว่าจะกดดึงข้อมูลสำเร็จ
+            }
+        }
+
+        // ฟังก์ชันเลือกสถานะปกติทั้งหมด (มา, อยู่, ทำเวร, ละหมาด)
+        function selectAllNormalStatus() {
+            const positiveValues = ['มา', 'อยู่', 'ทำเวร', 'ละหมาด'];
+            const leaveValues = ['ลาป่วย', 'ลากิจ', 'ลาแข่งขัน', 'ลา'];
+            const tbody = document.getElementById('routineCheckTableBody');
+            if(!tbody) return;
+            
+            let count = 0;
+            const rows = tbody.querySelectorAll('tr');
+            
+            rows.forEach(tr => {
+                // ข้ามถ้าแถวถูกซ่อนจากการค้นหา
+                if(tr.style.display === 'none') return;
+                if(tr.cells.length < 6) return; // ไม่ใช่แถวข้อมูลนักเรียน
+                
+                const radios = tr.querySelectorAll('input[type="radio"]');
+                let hasLeave = false;
+                
+                // ตรวจสอบว่ามีการลากำหนดไว้แล้วหรือไม่
+                radios.forEach(r => {
+                    if(r.checked && leaveValues.includes(r.value)) {
+                        hasLeave = true;
+                    }
+                });
+                
+                // ถ้าไม่มีการลา และไม่ถูกล็อค ให้เช็คสถานะปกติ
+                if(!hasLeave) {
+                    for (let radio of radios) {
+                        if (positiveValues.includes(radio.value) && !radio.closest('label').classList.contains('pointer-events-none')) {
+                            radio.checked = true;
+                            count++;
+                            break; 
+                        }
+                    }
+                }
+            });
+            
+            if(count > 0) {
+                showToast(`เลือกสถานะปกติให้นักเรียน ${count} คน สำเร็จ`, 'success');
+            } else {
+                showToast('ไม่มีรายชื่อที่สามารถอัปเดตได้ (ทุกคนลา หรือไม่มีข้อมูลในตาราง)', 'info');
             }
         }
 
@@ -3954,11 +4254,20 @@
                         const stRoomCombined = (stRm && stRm !== '-') ? `${stLvl}/${stRm}` : stLvl;
                         const stSport = String(st.sportType || '').replace(/\s+/g, '').toLowerCase();
                         
-                        let matchRoom = true;
-                        if(targetRooms.length > 0 && targetRooms[0] !== 'ทั้งหมด') matchRoom = targetRooms.includes(stRoomCombined) || targetRooms.includes(stLvl);
+                        let matchRoom = false;
+                        if(targetRooms.length === 0 || targetRooms.includes('ทั้งหมด')) {
+                            matchRoom = true;
+                        } else {
+                            matchRoom = targetRooms.includes(stRoomCombined) || targetRooms.includes(stLvl);
+                        }
                         
-                        let matchSport = true;
-                        if(targetSports.length > 0 && targetSports[0] !== 'ทั้งหมด') matchSport = targetSports.some(s => stSport === s || stSport.includes(s) || s.includes(stSport));
+                        let matchSport = false;
+                        if(targetSports.length === 0 || targetSports.includes('ทั้งหมด')) {
+                            matchSport = true;
+                        } else {
+                            // อัปเดตตรรกะ: ป้องกันนักเรียนที่ค่ากีฬาว่างเปล่าหลุดการกรอง (s.includes('') เป็น true)
+                            matchSport = targetSports.some(s => stSport !== '' && (stSport === s || stSport.includes(s) || s.includes(stSport)));
+                        }
                         
                         return matchRoom && matchSport;
                     });
@@ -3968,16 +4277,23 @@
                         return;
                     }
 
+                    const isDormRoutine = String(routineSelect).includes('อยู่หอ');
+                    const isPrayRoutine = String(routineSelect).includes('ละหมาด');
+                    const isFlagRoutine = String(routineSelect).includes('หน้าเสาธง');
+
                     const sortedStudents = [...filteredStudents].sort((a,b) => {
+                        // หากเป็นกิจวัตรหอพัก ให้เรียงตาม "ชนิดกีฬา" เป็นอันดับแรก
+                        if (isDormRoutine) {
+                            const sportA = a.sportType || '';
+                            const sportB = b.sportType || '';
+                            if (sportA !== sportB) return String(sportA).localeCompare(String(sportB));
+                        }
+                        // จากนั้นเรียงตามห้องและรหัสตามปกติ
                         const roomA = (a.room && a.room !== '-') ? `${a.level}/${a.room}` : a.level;
                         const roomB = (b.room && b.room !== '-') ? `${b.level}/${b.room}` : b.level;
                         if(roomA !== roomB) return String(roomA).localeCompare(String(roomB));
                         return String(a.studentId).localeCompare(String(b.studentId));
                     });
-
-                    const isDormRoutine = String(routineSelect).includes('อยู่หอ');
-                    const isPrayRoutine = String(routineSelect).includes('ละหมาด');
-                    const isFlagRoutine = String(routineSelect).includes('หน้าเสาธง');
                     
                     const isLockedLeave = (currentUserRole !== 'ผู้ดูแลระบบ');
                     const leaveLockClass = isLockedLeave ? 'pointer-events-none opacity-50' : 'cursor-pointer hover:font-bold';
@@ -3990,7 +4306,7 @@
                         let statusRadios = '';
                         
                         if(isDutyRoutine) {
-                            const chkDuty = !isLeave ? 'checked' : '';
+                            const chkDuty = ''; // เอาติ๊กอัตโนมัติออก ให้ครูเลือกเอง
                             const chkLeave = isLeave ? 'checked' : '';
                             statusRadios = `
                                 <label class="text-green-600 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="ทำเวร" class="accent-green-600 mr-1" ${chkDuty}> ทำเวร</label>
@@ -3998,7 +4314,7 @@
                                 <label class="text-yellow-500 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="att_${st.studentId}" value="ลา" class="accent-yellow-500 mr-1" ${chkLeave}> ลา</label>
                             `;
                         } else if (isDormRoutine) {
-                            const chkHere = !isLeave ? 'checked' : '';
+                            const chkHere = ''; // เอาติ๊กอัตโนมัติออก ให้ครูเลือกเอง
                             const chkSick = leaveType === 'ลาป่วย' ? 'checked' : '';
                             const chkPersonal = (leaveType === 'ลากิจ' || leaveType === 'ลากลับบ้าน') ? 'checked' : '';
                             const chkSport = (leaveType === 'แข่งขันกีฬา' || leaveType === 'ลาแข่งขัน') ? 'checked' : '';
@@ -4010,7 +4326,7 @@
                                 <label class="text-blue-500 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="att_${st.studentId}" value="ลาแข่งขัน" class="accent-blue-500 mr-1" ${chkSport}> ลาแข่งขัน</label>
                             `;
                         } else if (isPrayRoutine) {
-                            const chkPray = !isLeave ? 'checked' : '';
+                            const chkPray = ''; // เอาติ๊กอัตโนมัติออก ให้ครูเลือกเอง
                             const chkSick = leaveType === 'ลาป่วย' ? 'checked' : '';
                             const chkPersonal = (leaveType === 'ลากิจ' || leaveType === 'ลากลับบ้าน') ? 'checked' : '';
                             const chkSport = (leaveType === 'แข่งขันกีฬา' || leaveType === 'ลาแข่งขัน') ? 'checked' : '';
@@ -4023,7 +4339,7 @@
                                 <label class="text-blue-500 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="att_${st.studentId}" value="ลาแข่งขัน" class="accent-blue-500 mr-1" ${chkSport}> ลาแข่งขัน</label>
                             `;
                         } else if (isFlagRoutine) {
-                            const chkHere = !isLeave ? 'checked' : '';
+                            const chkHere = ''; // เอาติ๊กอัตโนมัติออก ให้ครูเลือกเอง
                             const chkSick = leaveType === 'ลาป่วย' ? 'checked' : '';
                             const chkPersonal = (leaveType === 'ลากิจ' || leaveType === 'ลากลับบ้าน') ? 'checked' : '';
                             const chkSport = (leaveType === 'แข่งขันกีฬา' || leaveType === 'ลาแข่งขัน') ? 'checked' : '';
@@ -4036,7 +4352,7 @@
                                 <label class="text-blue-500 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="att_${st.studentId}" value="ลาแข่งขัน" class="accent-blue-500 mr-1" ${chkSport}> ลาแข่งขัน</label>
                             `;
                         } else {
-                            const chkHere = !isLeave ? 'checked' : '';
+                            const chkHere = ''; // เอาติ๊กอัตโนมัติออก ให้ครูเลือกเอง
                             const chkLeave = isLeave ? 'checked' : '';
                             statusRadios = `
                                 <label class="text-green-600 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="อยู่" class="accent-green-600 mr-1" ${chkHere}> อยู่</label>
@@ -4046,13 +4362,16 @@
                             `;
                         }
 
+                        // เพิ่ม Highlight คอลัมน์กีฬาหากเป็นกิจวัตรหอพัก
+                        const sportDisplay = isDormRoutine ? `<span class="text-rsct-red font-bold bg-red-50 px-2 py-1 rounded border border-red-100">${st.sportType || '-'}</span>` : (st.sportType || '-');
+
                         tbody.innerHTML += `
                             <tr class="border-b hover:bg-gray-50">
                                 <td class="p-3 text-center text-gray-500">${idx + 1}</td>
                                 <td class="p-3 font-semibold text-blue-800">${st.studentId || '-'}</td>
                                 <td class="p-3">${st.fullName || ''}</td>
                                 <td class="p-3 text-gray-600">${displayRoom}</td>
-                                <td class="p-3 text-xs">${st.sportType || '-'}</td>
+                                <td class="p-3 text-xs whitespace-nowrap">${sportDisplay}</td>
                                 <td class="p-3 text-center"><div class="flex justify-center gap-3">${statusRadios}</div></td>
                             </tr>
                         `;
@@ -4060,8 +4379,17 @@
                     
                     let isUpdateInput = document.getElementById('isRoutineUpdate');
                     if(isUpdateInput) isUpdateInput.value = 'false';
-                    document.getElementById('btnSaveRoutineCheck').innerHTML = '<i class="fas fa-save mr-2"></i> บันทึกข้อมูลการเช็คชื่อ';
                     
+                    // แสดงปุ่มบันทึก หลังจากโหลดรายชื่อเสร็จ
+                    const btnSave = document.getElementById('btnSaveRoutineCheck');
+                    if(btnSave) {
+                        btnSave.innerHTML = '<i class="fas fa-save mr-2"></i> บันทึกข้อมูลการเช็คชื่อ';
+                        btnSave.classList.remove('hidden');
+                    }
+                    
+                    const btnSelectAll = document.getElementById('btnSelectAllNormal');
+                    if(btnSelectAll) btnSelectAll.classList.remove('hidden');
+
                     showToast(`ดึงรายชื่อกลุ่มเป้าหมาย ${sortedStudents.length} คนสำเร็จ`, 'success');
                 }, true); // end fetchAllLeaves
             }, true); // end fetchAllStudents
@@ -4088,17 +4416,22 @@
                     if(res.status === 'success' && res.data && res.data.length > 0) {
                         // เพิ่มการกรองข้อมูลเดิม ให้แสดงเฉพาะนักเรียนที่อยู่ในเป้าหมายของครูคนนี้เท่านั้น!
                         const filteredRecords = res.data.filter(st => {
-                            let matchRoom = true;
-                            if(targetRooms.length > 0 && targetRooms[0] !== 'ทั้งหมด') {
+                            let matchRoom = false;
+                            if(targetRooms.length === 0 || targetRooms.includes('ทั้งหมด')) {
+                                matchRoom = true;
+                            } else {
                                 const stRoomCombined = String(st.room || '').replace(/\s+/g, '').toLowerCase();
                                 const stLvl = stRoomCombined.split('/')[0] || '';
                                 matchRoom = targetRooms.includes(stRoomCombined) || targetRooms.includes(stLvl);
                             }
                             
-                            let matchSport = true;
-                            if(targetSports.length > 0 && targetSports[0] !== 'ทั้งหมด') {
+                            let matchSport = false;
+                            if(targetSports.length === 0 || targetSports.includes('ทั้งหมด')) {
+                                matchSport = true;
+                            } else {
                                 const stSport = String(st.sport || '').replace(/\s+/g, '').toLowerCase();
-                                matchSport = targetSports.some(s => stSport === s || stSport.includes(s) || s.includes(stSport));
+                                // อัปเดตตรรกะ: ป้องกันนักเรียนที่ค่ากีฬาว่างเปล่าหลุดการกรองในโหมดแก้ไขเดิม
+                                matchSport = targetSports.some(s => stSport !== '' && (stSport === s || stSport.includes(s) || s.includes(stSport)));
                             }
                             return matchRoom && matchSport;
                         });
@@ -4144,6 +4477,19 @@
             const leaveLockClass = isLockedLeave ? 'pointer-events-none opacity-50' : 'cursor-pointer hover:font-bold';
             const leaveTitle = isLockedLeave ? 'title="อัปเดตอัตโนมัติจากระบบแจ้งลา (ติดต่อแอดมินเพื่อแก้ไข)"' : '';
 
+            // เรียงลำดับเหมือนหน้าเช็คใหม่ เพื่อให้ข้อมูลเดิมแสดงเป็นกลุ่มกีฬาด้วย
+            savedRecords.sort((a,b) => {
+                if (isDormRoutine) {
+                    const sportA = a.sport || '';
+                    const sportB = b.sport || '';
+                    if (sportA !== sportB) return String(sportA).localeCompare(String(sportB));
+                }
+                const roomA = a.room || '';
+                const roomB = b.room || '';
+                if(roomA !== roomB) return String(roomA).localeCompare(String(roomB));
+                return String(a.studentId).localeCompare(String(b.studentId));
+            });
+
             savedRecords.forEach((st, idx) => {
                 let statusRadios = '';
                 const stat = st.status;
@@ -4179,13 +4525,16 @@
                     `;
                 }
 
+                // เพิ่ม Highlight คอลัมน์กีฬาหากเป็นกิจวัตรหอพัก
+                const sportDisplay = isDormRoutine ? `<span class="text-rsct-red font-bold bg-red-50 px-2 py-1 rounded border border-red-100">${st.sport || '-'}</span>` : (st.sport || '-');
+
                 tbody.innerHTML += `
                     <tr class="border-b hover:bg-gray-50 bg-yellow-50">
                         <td class="p-3 text-center text-gray-500">${idx + 1}</td>
                         <td class="p-3 font-semibold text-blue-800">${st.studentId || '-'}</td>
                         <td class="p-3">${st.fullName || '-'}</td>
                         <td class="p-3 text-gray-600">${st.room || '-'}</td>
-                        <td class="p-3 text-xs">${st.sport || '-'}</td>
+                        <td class="p-3 text-xs whitespace-nowrap">${sportDisplay}</td>
                         <td class="p-3 text-center"><div class="flex justify-center gap-3">${statusRadios}</div></td>
                     </tr>
                 `;
@@ -4201,7 +4550,16 @@
                 document.getElementById('routineCheckForm').appendChild(isUpdateInput);
             }
             isUpdateInput.value = 'true';
-            document.getElementById('btnSaveRoutineCheck').innerHTML = '<i class="fas fa-edit mr-2"></i> บันทึกแทนที่ข้อมูลเดิม';
+            
+            // แสดงปุ่มบันทึก หลังจากโหลดข้อมูลเดิมเสร็จ
+            const btnSave = document.getElementById('btnSaveRoutineCheck');
+            if(btnSave) {
+                btnSave.innerHTML = '<i class="fas fa-edit mr-2"></i> บันทึกแทนที่ข้อมูลเดิม';
+                btnSave.classList.remove('hidden');
+            }
+
+            const btnSelectAll = document.getElementById('btnSelectAllNormal');
+            if(btnSelectAll) btnSelectAll.classList.remove('hidden');
         }
 
         function saveRoutineCheckData(e) {
@@ -4260,7 +4618,12 @@
                     showToast(isUpdateFlag === 'true' ? "อัปเดตข้อมูลเดิมสำเร็จ!" : "บันทึกการเช็คชื่อกิจวัตรสำเร็จ!", "success");
                     document.getElementById('routineCheckTableBody').innerHTML = `<tr><td colspan="6" class="p-8 text-center text-gray-400"><i class="fas fa-check-circle text-2xl mb-2 text-green-500 block"></i> บันทึกข้อมูลเรียบร้อยแล้ว<br>กรุณาเลือกกิจวัตรและวันที่อื่นเพื่อทำรายการต่อ</td></tr>`;
                     if(isUpdateInput) isUpdateInput.value = 'false';
-                    document.getElementById('btnSaveRoutineCheck').innerHTML = '<i class="fas fa-save mr-2"></i> บันทึกข้อมูลการเช็คชื่อ';
+                    
+                    const btnSave = document.getElementById('btnSaveRoutineCheck');
+                    if(btnSave) {
+                        btnSave.innerHTML = '<i class="fas fa-save mr-2"></i> บันทึกข้อมูลการเช็คชื่อ';
+                        btnSave.classList.add('hidden'); // ซ่อนปุ่มบันทึกหลังจากเซฟเสร็จ
+                    }
                     
                     // บันทึกสถานะการเช็คชื่อของวันนั้นลง LocalStorage (อ้างอิงชื่อครู, วันที่, กิจวัตร)
                     const saveKey = `rsct_saved_routine_${currentUserName}_${routineDate}_${routineName}`;
@@ -5823,7 +6186,8 @@
                     const stName = st.fullName ? st.fullName.toLowerCase() : '';
                     const stId = st.studentId ? String(st.studentId).toLowerCase() : '';
                     
-                    let matchSport = sportFilter === "" || stSport.includes(sportFilter) || sportFilter.includes(stSport);
+                    // อัปเดตตรรกะ: ป้องกันนักเรียนที่ค่ากีฬาว่างเปล่าหลุดการกรองหน้าแจ้งลา
+                    let matchSport = sportFilter === "" || (stSport !== "" && (stSport.includes(sportFilter) || sportFilter.includes(stSport)));
                     let matchRoom = roomFilter === "" || stRoom === roomFilter;
                     let matchSearch = searchFilter === "" || stName.includes(searchFilter) || stId.includes(searchFilter);
                     
@@ -5898,7 +6262,17 @@
 
         function submitLeaveForm(event) {
             event.preventDefault();
+            
+            // ใส่ชื่อผู้บันทึกลงใน Hidden Input ก่อนจะดึงข้อมูล Form (เพิ่มการดักจับ Null ป้องกัน Error)
+            const recorderInput = document.getElementById('leaveRecorder');
+            if (recorderInput) {
+                recorderInput.value = currentUserName;
+            }
+
             const hiddenInput = document.getElementById('leave_selected_students');
+            if (!hiddenInput) {
+                return showToast("เกิดข้อผิดพลาด ไม่พบข้อมูลนักเรียนที่เลือก", "error");
+            }
             if (!hiddenInput.value) {
                 return showToast("กรุณาเลือกนักเรียนที่ต้องการลาอย่างน้อย 1 คน", "error");
             }
@@ -5947,6 +6321,13 @@
             document.getElementById('leaveDate').valueAsDate = new Date();
             document.getElementById('leaveStartDate').valueAsDate = new Date();
             calcLeaveEndDate();
+            
+            // เพิ่มการตั้งค่าชื่อผู้บันทึกอัตโนมัติให้แสดงในฟอร์ม
+            const recorderInput = document.getElementById('leaveRecorder');
+            if (recorderInput) {
+                recorderInput.value = currentUserName || '';
+            }
+            
             showToast("ล้างข้อมูลฟอร์มพร้อมสำหรับการกรอกใหม่", "info");
         }
         
@@ -5979,12 +6360,20 @@
 
         function fetchLeaveRecords() {
             const tbody = document.querySelector('#leaveHistoryTable tbody');
-            if(tbody) tbody.innerHTML = '<tr><td colspan="8" class="p-8 text-center text-gray-500"><i class="fas fa-spinner fa-spin text-2xl mb-2 text-blue-500 block"></i>กำลังโหลดข้อมูลประวัติการลา...</td></tr>';
+            const thAction = document.getElementById('th_leave_action');
+            const showActionCol = (currentUserRole === 'ผู้บริหาร' || currentUserRole === 'ผู้ดูแลระบบ');
+            const colSpanCount = showActionCol ? 9 : 8;
+
+            if (thAction) {
+                thAction.style.display = showActionCol ? '' : 'none';
+            }
+
+            if(tbody) tbody.innerHTML = `<tr><td colspan="${colSpanCount}" class="p-8 text-center text-gray-500"><i class="fas fa-spinner fa-spin text-2xl mb-2 text-blue-500 block"></i>กำลังโหลดข้อมูลประวัติการลา...</td></tr>`;
             
             sendJSONP('getLeaveRecords', {}, function(res) {
                 if(res.status === 'success') {
                     if(res.data.length === 0) {
-                        if(tbody) tbody.innerHTML = '<tr><td colspan="8" class="p-8 text-center text-gray-500"><i class="fas fa-info-circle text-2xl mb-2 block"></i>ยังไม่มีประวัติการแจ้งลาในระบบ</td></tr>';
+                        if(tbody) tbody.innerHTML = `<tr><td colspan="${colSpanCount}" class="p-8 text-center text-gray-500"><i class="fas fa-info-circle text-2xl mb-2 block"></i>ยังไม่มีประวัติการแจ้งลาในระบบ</td></tr>`;
                         return;
                     }
                     if(tbody) {
@@ -6013,36 +6402,51 @@
                                 statusBadge = '<span class="text-yellow-600 font-bold"><i class="fas fa-clock"></i> รออนุมัติ</span>';
                             }
                             
-                            let actionBtn = '-';
-                            if (statusText === 'รออนุมัติ' && (currentUserRole === 'ผู้บริหาร' || currentUserRole === 'ผู้ดูแลระบบ')) {
-                                actionBtn = `
-                                    <div class="flex flex-col gap-1">
-                                        <button onclick="approveLeaveItem(${item.rowIndex})" class="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-xs font-bold shadow-sm transition"><i class="fas fa-check"></i> อนุมัติ</button>
-                                        <button onclick="rejectLeaveItem(${item.rowIndex})" class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs font-bold shadow-sm transition"><i class="fas fa-times"></i> ไม่อนุมัติ</button>
-                                    </div>
-                                `;
-                            } else if (statusText === 'อนุมัติแล้ว') {
-                                actionBtn = `<span class="text-xs text-green-600 font-bold"><i class="fas fa-check"></i> อนุมัติแล้ว</span>`;
-                            } else if (statusText.includes('ไม่อนุมัติ')) {
-                                actionBtn = `<span class="text-xs text-red-600 font-bold cursor-help" title="${statusText}"><i class="fas fa-info-circle"></i> ดูสาเหตุ</span>`;
+                            let actionTdHtml = '';
+                            if (showActionCol) {
+                                let actionBtn = '-';
+                                if (statusText === 'รออนุมัติ') {
+                                    actionBtn = `
+                                        <div class="flex flex-col gap-1">
+                                            <button onclick="approveLeaveItem(${item.rowIndex})" class="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-xs font-bold shadow-sm transition"><i class="fas fa-check"></i> อนุมัติ</button>
+                                            <button onclick="rejectLeaveItem(${item.rowIndex})" class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs font-bold shadow-sm transition"><i class="fas fa-times"></i> ไม่อนุมัติ</button>
+                                        </div>
+                                    `;
+                                } else if (statusText === 'อนุมัติแล้ว') {
+                                    actionBtn = `<span class="text-xs text-green-600 font-bold"><i class="fas fa-check"></i> อนุมัติแล้ว</span>`;
+                                } else if (statusText.includes('ไม่อนุมัติ')) {
+                                    actionBtn = `<span class="text-xs text-red-600 font-bold cursor-help" title="${statusText}"><i class="fas fa-info-circle"></i> ดูสาเหตุ</span>`;
+                                }
+                                actionTdHtml = `<td class="p-3 text-center">${actionBtn}</td>`;
+                            }
+
+                            // แยกและแสดงเฉพาะชื่อนักเรียน (ตัดรหัสประจำตัวออกจากการแสดงผลในตาราง)
+                            let studentNameOnly = item.student || '-';
+                            if (studentNameOnly.includes(' - ')) {
+                                studentNameOnly = studentNameOnly.split(' - ')[1].trim();
                             }
 
                             tbody.innerHTML += `
                                 <tr class="border-b hover:bg-gray-50 transition">
                                     <td class="p-3 text-xs text-gray-500 border-r">${item.recordDate || '-'}</td>
                                     <td class="p-3 font-semibold text-rsct-dark border-r text-center text-xs whitespace-nowrap">${leavePeriod}</td>
-                                    <td class="p-3 text-blue-800 border-r font-medium">${item.student || '-'}</td>
+                                    <td class="p-3 text-blue-800 border-r font-medium">
+                                        <a href="javascript:void(0)" onclick="openStudentModal('${item.student}')" class="text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1">
+                                            <i class="fas fa-search"></i> ${studentNameOnly}
+                                        </a>
+                                    </td>
                                     <td class="p-3 text-center border-r"><span class="px-2 py-1 rounded text-xs font-bold border ${typeStyle}">${item.type || '-'}</span></td>
                                     <td class="p-3 text-center font-bold text-rsct-red border-r">${item.days || '-'}</td>
                                     <td class="p-3 text-gray-600 max-w-[200px] truncate border-r" title="${item.reason || ''}">${item.reason || '-'}</td>
+                                    <td class="p-3 text-center border-r text-gray-700 text-xs">${item.recorder || '-'}</td>
                                     <td class="p-3 text-center border-r">${statusBadge}</td>
-                                    <td class="p-3 text-center">${actionBtn}</td>
+                                    ${actionTdHtml}
                                 </tr>
                             `;
                         });
                     }
                 } else {
-                    if(tbody) tbody.innerHTML = '<tr><td colspan="8" class="p-8 text-center text-red-500"><i class="fas fa-exclamation-triangle text-2xl mb-2 block"></i> โหลดข้อมูลล้มเหลว กรุณาลองใหม่อีกครั้ง</td></tr>';
+                    if(tbody) tbody.innerHTML = `<tr><td colspan="${colSpanCount}" class="p-8 text-center text-red-500"><i class="fas fa-exclamation-triangle text-2xl mb-2 block"></i> โหลดข้อมูลล้มเหลว กรุณาลองใหม่อีกครั้ง</td></tr>`;
                 }
             });
         }
@@ -6096,53 +6500,215 @@
             }
         }
 
-        // ================= ฟังก์ชันสำหรับรายงานและสถิติหอพัก =================
-        function loadReportOptions() {
-            const dateInput = document.getElementById('reportFilterDate').value;
-            if(!dateInput) return;
+        // --- เพิ่มฟังก์ชันจัดการป๊อปอัพข้อมูลนักเรียน ---
+        function openStudentModal(studentStr) {
+            if (!studentStr || studentStr === '-') return;
+            const studentId = studentStr.split('-')[0].trim();
             
-            // ฟังก์ชันแก้ปัญหาวันที่ไม่ตรงกันครอบจักรวาล (ดักจับทั้งรูปแบบ ค.ศ. พ.ศ. มีศูนย์ ไม่มีศูนย์ Timezone ฯลฯ)
-            const getStandardDate = (dStr) => {
-                if(!dStr) return "";
-                let str = String(dStr).trim();
-                
-                if (str.includes("GMT") || str.includes("T") || str.match(/[a-zA-Z]/)) {
-                    let d = new Date(str);
-                    if (!isNaN(d.getTime())) {
-                        let y = d.getFullYear();
-                        if (y < 2400) y += 543;
-                        return `${d.getDate()}/${d.getMonth()+1}/${y}`;
-                    }
-                }
-                
-                if(str.includes(' ')) str = str.split(' ')[0];
-                
-                let parts = str.split(/[-/]/);
-                if(parts.length >= 3) {
-                    let p1 = parseInt(parts[0]);
-                    let p2 = parseInt(parts[1]);
-                    let p3 = parseInt(parts[2]);
-                    
-                    let d, m, y;
-                    if (p1 > 1000) { y = p1; m = p2; d = p3; } 
-                    else { d = p1; m = p2; y = p3; }
-                    
-                    if (y < 2400) y += 543;
-                    return `${d}/${m}/${y}`;
-                }
-                return str;
-            };
+            const elId = document.getElementById('modal_std_id');
+            const elName = document.getElementById('modal_std_name');
+            const elLevel = document.getElementById('modal_std_level');
+            const elSport = document.getElementById('modal_std_sport');
+            const elPhone = document.getElementById('modal_std_phone');
+            const elImage = document.getElementById('modal_std_image');
+            const modal = document.getElementById('studentInfoModal');
+            const box = document.getElementById('studentInfoModalBox');
 
-            const dateObj = new Date(dateInput);
-            const targetDateStr = `${dateObj.getDate()}/${dateObj.getMonth() + 1}/${dateObj.getFullYear() + 543}`;
-            const targetDateNormalized = getStandardDate(targetDateStr);
-            
+            if (elId) elId.textContent = "รหัสประจำตัว: " + studentId;
+            if (elName) elName.textContent = "กำลังโหลดข้อมูล...";
+            if (elLevel) elLevel.textContent = "-";
+            if (elSport) elSport.textContent = "-";
+            if (elPhone) elPhone.textContent = "-";
+            if (elImage) elImage.src = "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png";
+
+            if (modal) {
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    if(box) {
+                        box.classList.remove('scale-95', 'opacity-0');
+                        box.classList.add('scale-100', 'opacity-100');
+                    }
+                }, 10);
+            }
+
+            sendJSONP('searchStudent', { keyword: studentId }, function(res) {
+                if(res.status === 'success') {
+                    const student = res.data;
+                    if (elName) elName.textContent = `${student.prefix || ''}${student.fullName}`;
+                    if (elLevel) elLevel.textContent = (student.room && student.room !== '-') ? `${student.level}/${student.room}` : student.level;
+                    if (elSport) elSport.textContent = student.studentType === 'สานฝันการกีฬา' ? student.sportType : '-';
+                    const phone = student.guardianTel || student.fatherTel || student.motherTel || "ไม่มีข้อมูลเบอร์โทรศัพท์";
+                    if (elPhone) elPhone.textContent = phone;
+
+                    if(student.studentPhotoBase64 && student.studentPhotoBase64 !== "-" && student.studentPhotoBase64 !== "") {
+                        if (elImage) elImage.src = student.studentPhotoBase64;
+                    }
+                } else {
+                    if (elName) elName.textContent = "ไม่พบข้อมูลนักเรียน";
+                }
+            });
+        }
+
+        function closeStudentModal() {
+            const modal = document.getElementById('studentInfoModal');
+            const box = document.getElementById('studentInfoModalBox');
+            if (box) {
+                box.classList.remove('scale-100', 'opacity-100');
+                box.classList.add('scale-95', 'opacity-0');
+            }
+            setTimeout(() => {
+                if (modal) modal.classList.add('hidden');
+            }, 200);
+        }
+
+        // ================= ฟังก์ชันสำหรับรายงานและสถิติหอพัก =================
+        function handleReportTypeChange() {
             const type = document.getElementById('reportFilterType').value;
+            const dynamicFormContainer = document.getElementById('reportDynamicFormContainer');
+            const itemContainer = document.getElementById('reportItemFilterContainer');
+            const dateContainer = document.getElementById('reportDateFilterContainer');
+            const submitContainer = document.getElementById('reportSubmitContainer');
+            const itemSelect = document.getElementById('reportFilterItem');
+
+            if (type) {
+                // เปิด Container ฟอร์มย่อย
+                if (dynamicFormContainer) dynamicFormContainer.classList.remove('hidden');
+                
+                // ขั้นที่ 2: เปิดให้เลือกรายการ (Item)
+                if(itemContainer) itemContainer.classList.remove('opacity-50', 'pointer-events-none');
+                
+                // ปิดวันที่และปุ่มค้นหาไว้ก่อน จนกว่าจะเลือกรายการ
+                if(dateContainer) dateContainer.classList.add('opacity-50', 'pointer-events-none');
+                if(submitContainer) submitContainer.classList.add('opacity-50', 'pointer-events-none');
+                
+                loadReportOptions();
+            } else {
+                // ปิดฟอร์มย่อยทั้งหมดหากไม่ได้เลือกประเภท
+                if (dynamicFormContainer) dynamicFormContainer.classList.add('hidden');
+                
+                if(itemContainer) itemContainer.classList.add('opacity-50', 'pointer-events-none');
+                if(dateContainer) dateContainer.classList.add('opacity-50', 'pointer-events-none');
+                if(submitContainer) submitContainer.classList.add('opacity-50', 'pointer-events-none');
+                if(itemSelect) itemSelect.innerHTML = '<option value="">-- กรุณาเลือกประเภทรายงานก่อน --</option>';
+                
+                document.getElementById('reportDetailContainer').classList.add('hidden');
+                document.getElementById('reportStatusSummary').classList.add('hidden');
+                if(document.getElementById('reportEmptyMessage')) document.getElementById('reportEmptyMessage').classList.add('hidden');
+            }
+        }
+
+        function handleReportItemChange() {
+            const item = document.getElementById('reportFilterItem').value;
+            const dateContainer = document.getElementById('reportDateFilterContainer');
+            const submitContainer = document.getElementById('reportSubmitContainer');
+            
+            if (item) {
+                // ขั้นที่ 3: เปิดให้เลือกวันที่และกดค้นหา
+                if(dateContainer) dateContainer.classList.remove('opacity-50', 'pointer-events-none');
+                if(submitContainer) submitContainer.classList.remove('opacity-50', 'pointer-events-none');
+            } else {
+                if(dateContainer) dateContainer.classList.add('opacity-50', 'pointer-events-none');
+                if(submitContainer) submitContainer.classList.add('opacity-50', 'pointer-events-none');
+            }
+        }
+
+        function handleReportDateFilterChange() {
+            const filter = document.getElementById('report_date_filter').value;
+            const customDiv = document.getElementById('report_custom_date_div');
+            
+            if (filter === 'custom') {
+                customDiv.classList.remove('hidden');
+                if(!document.getElementById('report_start_date').value) document.getElementById('report_start_date').valueAsDate = new Date();
+                if(!document.getElementById('report_end_date').value) document.getElementById('report_end_date').valueAsDate = new Date();
+            } else {
+                customDiv.classList.add('hidden');
+            }
+        }
+
+        function getReportDateRange() {
+            const filterType = document.getElementById('report_date_filter') ? document.getElementById('report_date_filter').value : 'today';
+            let dStart = new Date(); dStart.setHours(0,0,0,0);
+            let dEnd = new Date(); dEnd.setHours(23,59,59,999);
+
+            if (filterType === 'yesterday') {
+                dStart.setDate(dStart.getDate() - 1);
+                dEnd.setDate(dEnd.getDate() - 1);
+            } else if (filterType === 'custom') {
+                const sVal = document.getElementById('report_start_date').value;
+                const eVal = document.getElementById('report_end_date').value;
+                if (sVal) dStart = new Date(sVal);
+                if (eVal) { dEnd = new Date(eVal); dEnd.setHours(23,59,59,999); }
+                else { dEnd = new Date(dStart); dEnd.setHours(23,59,59,999); }
+            }
+            return { start: dStart, end: dEnd };
+        }
+
+        // เพิ่มฟังก์ชันจัดรูปแบบวันที่เป็น Global Helper เพื่อป้องกัน Error is not defined
+        function getStandardDate(dStr) {
+            if(!dStr) return "";
+            let str = String(dStr).trim();
+            
+            if (str.includes("GMT") || str.includes("T") || str.match(/[a-zA-Z]/)) {
+                let d = new Date(str);
+                if (!isNaN(d.getTime())) {
+                    let y = d.getFullYear();
+                    if (y < 2400) y += 543;
+                    return `${d.getDate()}/${d.getMonth()+1}/${y}`;
+                }
+            }
+            
+            if(str.includes(' ')) str = str.split(' ')[0];
+            
+            let parts = str.split(/[-/]/);
+            if(parts.length >= 3) {
+                let p1 = parseInt(parts[0]);
+                let p2 = parseInt(parts[1]);
+                let p3 = parseInt(parts[2]);
+                
+                let d, m, y;
+                if (p1 > 1000) { y = p1; m = p2; d = p3; } 
+                else { d = p1; m = p2; y = p3; }
+                
+                if (y < 2400) y += 543;
+                return `${d}/${m}/${y}`;
+            }
+            return str;
+        }
+
+        function loadReportOptions() {
+            const type = document.getElementById('reportFilterType').value;
+            if (!type) return;
+
             const itemSelect = document.getElementById('reportFilterItem');
             
+            // --- ใหม่: จัดการกรณีเลือกตรวจสอบการบันทึกของครู ---
+            if (type === 'teacher_entry') {
+                itemSelect.innerHTML = '<option value="">-- เลือกประเภทรายการ --</option><option value="routine">ตรวจสอบกิจวัตรประจำวัน</option><option value="class">ตรวจสอบรายวิชาเรียน</option>';
+                document.getElementById('reportDetailContainer').classList.add('hidden');
+                document.getElementById('reportStatusSummary').classList.add('hidden');
+                if(document.getElementById('reportEmptyMessage')) document.getElementById('reportEmptyMessage').classList.add('hidden');
+                
+                // โหลดข้อมูลเวรและตารางสอนเผื่อไว้ (หากยังไม่โหลด)
+                if(teacherDutyList.length === 0) fetchTeacherDutiesData();
+                if(teachingScheduleList.length === 0) fetchTeachingSchedulesData();
+                
+                showLoader(true);
+                sendJSONP('getReportDataByDate', {}, function(res) {
+                    showLoader(false);
+                    if(res.status === 'success') {
+                        allReportDataCache = res.data;
+                        const dateRange = getReportDateRange();
+                        updateDormStatsRange(dateRange, allReportDataCache.students, allReportDataCache.leaves);
+                    }
+                });
+                return;
+            }
+            // ------------------------------------------
+
             itemSelect.innerHTML = '<option value="">กำลังโหลดข้อมูล...</option>';
             document.getElementById('reportDetailContainer').classList.add('hidden');
             document.getElementById('reportStatusSummary').classList.add('hidden');
+            if(document.getElementById('reportEmptyMessage')) document.getElementById('reportEmptyMessage').classList.add('hidden');
             
             showLoader(true);
             sendJSONP('getReportDataByDate', {}, function(res) {
@@ -6153,59 +6719,55 @@
                     let itemsSet = new Set();
                     let logsToSearch = type === 'routine' ? (allReportDataCache.routineLogs || []) : (allReportDataCache.classLogs || []);
                     
+                    // ดึงชื่อรายการทั้งหมดออกมา โดยไม่จำกัดด้วยวันที่
                     logsToSearch.forEach(row => {
                         let rowKeys = Object.keys(row);
+                        let itemName = '';
                         
-                        // ค้นหาคอลัมน์วันที่อย่างยืดหยุ่นที่สุด
-                        let dateKey = rowKeys.find(k => k.includes('วันที่') || k.includes('Date')) || rowKeys[0];
-                        let dateVal = row[dateKey] || '';
+                        if(type === 'routine') {
+                            itemName = row['กิจวัตร'] || row['รายการกิจวัตร'] || row['รายการ'];
+                            if(!itemName) {
+                                let foundKey = rowKeys.find(k => k.includes('กิจวัตร') || k.includes('รายการ'));
+                                if(foundKey) itemName = row[foundKey];
+                                else itemName = Object.values(row)[1] || Object.values(row)[2];
+                            }
+                        } else {
+                            let period = row['คาบเรียน'] || row['คาบ'];
+                            if(!period) {
+                                let pKey = rowKeys.find(k => k.includes('คาบ'));
+                                if(pKey) period = row[pKey];
+                                else period = Object.values(row)[1];
+                            }
+                            
+                            let subj = row['วิชา'] || row['รหัส/ชื่อวิชา'] || row['ชื่อวิชา'];
+                            if(!subj) {
+                                let sKey = rowKeys.find(k => k.includes('วิชา'));
+                                if(sKey) subj = row[sKey];
+                                else subj = Object.values(row)[2];
+                            }
+                            
+                            if (period && subj) itemName = `คาบ ${period} : ${subj}`;
+                            else if (subj) itemName = subj;
+                            else itemName = "ไม่ระบุวิชา";
+                        }
                         
-                        // เทียบวันที่
-                        if(getStandardDate(dateVal) === targetDateNormalized) {
-                            let itemName = '';
-                            if(type === 'routine') {
-                                itemName = row['กิจวัตร'] || row['รายการกิจวัตร'] || row['รายการ'];
-                                if(!itemName) {
-                                    let foundKey = rowKeys.find(k => k.includes('กิจวัตร') || k.includes('รายการ'));
-                                    if(foundKey) itemName = row[foundKey];
-                                    else itemName = Object.values(row)[1] || Object.values(row)[2];
-                                }
-                            } else {
-                                let period = row['คาบเรียน'] || row['คาบ'];
-                                if(!period) {
-                                    let pKey = rowKeys.find(k => k.includes('คาบ'));
-                                    if(pKey) period = row[pKey];
-                                    else period = Object.values(row)[1];
-                                }
-                                
-                                let subj = row['วิชา'] || row['รหัส/ชื่อวิชา'] || row['ชื่อวิชา'];
-                                if(!subj) {
-                                    let sKey = rowKeys.find(k => k.includes('วิชา'));
-                                    if(sKey) subj = row[sKey];
-                                    else subj = Object.values(row)[2];
-                                }
-                                
-                                if (period && subj) itemName = `คาบ ${period} : ${subj}`;
-                                else if (subj) itemName = subj;
-                                else itemName = "ไม่ระบุวิชา";
-                            }
-                            if(itemName && String(itemName).trim() !== '') {
-                                itemsSet.add(String(itemName).trim());
-                            }
+                        if(itemName && String(itemName).trim() !== '') {
+                            itemsSet.add(String(itemName).trim());
                         }
                     });
                     
                     itemSelect.innerHTML = '<option value="">-- เลือกรายการที่ต้องการดู --</option>';
                     if(itemsSet.size === 0) {
-                        itemSelect.innerHTML = '<option value="">(ไม่พบข้อมูลการบันทึกในวันนี้)</option>';
+                        itemSelect.innerHTML = '<option value="">(ไม่พบข้อมูลในระบบ)</option>';
                     } else {
                         itemsSet.forEach(item => {
                             itemSelect.innerHTML += `<option value="${item}">${item}</option>`;
                         });
                     }
                     
-                    // อัปเดตสถิติหอพัก
-                    updateDormStats(targetDateStr, allReportDataCache.students, allReportDataCache.leaves);
+                    // อัปเดตสถิติหอพักตั้งต้น
+                    const dateRange = getReportDateRange();
+                    updateDormStatsRange(dateRange, allReportDataCache.students, allReportDataCache.leaves);
                 } else {
                     showToast('โหลดข้อมูลรายงานไม่สำเร็จ', 'error');
                 }
@@ -6215,47 +6777,136 @@
         function generateDetailedReport() {
             const item = document.getElementById('reportFilterItem').value;
             const type = document.getElementById('reportFilterType').value;
-            const dateInput = document.getElementById('reportFilterDate').value;
+            const dateRange = getReportDateRange();
             
             if(!item || !allReportDataCache) {
                 return showToast('กรุณาเลือกรายการที่ต้องการดูก่อน', 'warning');
             }
 
-            // ฟังก์ชันแก้ปัญหาวันที่ไม่ตรงกันครอบจักรวาล (ดักจับทั้งรูปแบบ ค.ศ. พ.ศ. มีศูนย์ ไม่มีศูนย์ Timezone ฯลฯ)
-            const getStandardDate = (dStr) => {
-                if(!dStr) return "";
-                let str = String(dStr).trim();
+            // --- ใหม่: ลอจิกสำหรับรายงานตรวจสอบการบันทึกของครู ---
+            if (type === 'teacher_entry') {
+                let missingRecords = [];
+                let currentDate = new Date(dateRange.start);
                 
-                if (str.includes("GMT") || str.includes("T") || str.match(/[a-zA-Z]/)) {
-                    let d = new Date(str);
-                    if (!isNaN(d.getTime())) {
-                        let y = d.getFullYear();
-                        if (y < 2400) y += 543;
-                        return `${d.getDate()}/${d.getMonth()+1}/${y}`;
-                    }
-                }
-                
-                if(str.includes(' ')) str = str.split(' ')[0];
-                
-                let parts = str.split(/[-/]/);
-                if(parts.length >= 3) {
-                    let p1 = parseInt(parts[0]);
-                    let p2 = parseInt(parts[1]);
-                    let p3 = parseInt(parts[2]);
-                    
-                    let d, m, y;
-                    if (p1 > 1000) { y = p1; m = p2; d = p3; } 
-                    else { d = p1; m = p2; y = p3; }
-                    
-                    if (y < 2400) y += 543;
-                    return `${d}/${m}/${y}`;
-                }
-                return str;
-            };
+                const dFormat = (d) => `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear() < 2400 ? d.getFullYear()+543 : d.getFullYear()}`;
+                const daysThai = ["อาทิตย์", "จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์"];
 
-            const dateObj = new Date(dateInput);
-            const targetDateStr = `${dateObj.getDate()}/${dateObj.getMonth() + 1}/${dateObj.getFullYear() + 543}`;
-            const targetDateNormalized = getStandardDate(targetDateStr);
+                while(currentDate <= dateRange.end) {
+                    let dateStr = dFormat(currentDate);
+                    let dayName = daysThai[currentDate.getDay()];
+
+                    if (item === 'routine') {
+                        const expectedDuties = teacherDutyList.filter(d => d.days === 'ทุกวัน' || (d.days && d.days.includes(dayName)));
+                        expectedDuties.forEach(duty => {
+                            let isRecorded = false;
+                            const routineName = duty.routine;
+                            
+                            if (allReportDataCache && allReportDataCache.routineLogs) {
+                                for (let log of allReportDataCache.routineLogs) {
+                                    let logDate = getStandardDate(log['วันที่']);
+                                    let logRoutine = log['กิจวัตร'] || log['รายการกิจวัตร'] || log['รายการ'];
+                                    
+                                    if (logDate === dateStr && String(logRoutine).trim() === String(routineName).trim()) {
+                                        isRecorded = true; break;
+                                    }
+                                }
+                            }
+                            if (!isRecorded) {
+                                missingRecords.push({
+                                    date: dateStr, task: routineName, target: duty.room || 'ทั้งหมด', teacher: duty.teachers || 'ไม่ระบุ'
+                                });
+                            }
+                        });
+                    } else if (item === 'class') {
+                        const expectedClasses = teachingScheduleList.filter(c => c.day === dayName);
+                        expectedClasses.forEach(cls => {
+                            let isRecorded = false;
+                            const period = cls.period;
+                            const subj = `${cls.subjectCode} ${cls.subjectName}`.trim();
+                            const room = cls.dept;
+
+                            if (allReportDataCache && allReportDataCache.classLogs) {
+                                for (let log of allReportDataCache.classLogs) {
+                                    let logDate = getStandardDate(log['วันที่เช็ค'] || log['วันที่เรียน'] || log['วันที่']);
+                                    let logPeriod = log['คาบเรียน'] || log['คาบ'];
+                                    let logSubj = log['วิชา'] || log['รหัส/ชื่อวิชา'] || log['ชื่อวิชา'];
+                                    
+                                    if (logDate === dateStr && String(logPeriod) === String(period) && String(logSubj).trim() === subj) {
+                                        try {
+                                            let records = JSON.parse(log['ข้อมูลเช็คชื่อ'] || '[]');
+                                            if (records.some(r => r.room === room)) { isRecorded = true; break; }
+                                        } catch(e) {}
+                                    }
+                                }
+                            }
+                            if (!isRecorded) {
+                                missingRecords.push({
+                                    date: dateStr, task: `คาบ ${period}: ${subj}`, target: room, teacher: cls.teacher || 'ไม่ระบุ'
+                                });
+                            }
+                        });
+                    }
+                    currentDate.setDate(currentDate.getDate() + 1);
+                }
+
+                const title = item === 'routine' ? 'ตรวจสอบการบันทึก กิจวัตรประจำวัน' : 'ตรวจสอบการบันทึก รายวิชาเรียน';
+                document.getElementById('reportDetailTitle').innerText = title;
+
+                const theadTr = document.querySelector('#reportDetailContainer thead tr');
+                theadTr.innerHTML = `
+                    <th class="px-4 py-3 w-16 text-center border-b">ลำดับ</th>
+                    <th class="px-4 py-3 w-24 border-b">วันที่</th>
+                    <th class="px-4 py-3 border-b">ครูผู้รับผิดชอบ</th>
+                    <th class="px-4 py-3 border-b">รายการ/เป้าหมาย</th>
+                    <th class="px-4 py-3 text-center border-b w-32">สถานะ</th>
+                `;
+
+                let tbodyHTML = '';
+                if (missingRecords.length === 0) {
+                    tbodyHTML = `<tr><td colspan="5" class="px-4 py-8 text-center text-green-600 font-bold"><i class="fas fa-check-circle text-2xl mb-2 block"></i> ไม่พบรายการค้างบันทึก (บันทึกครบถ้วนแล้ว)</td></tr>`;
+                    if(document.getElementById('reportEmptyMessage')) document.getElementById('reportEmptyMessage').classList.add('hidden');
+                } else {
+                    if(document.getElementById('reportEmptyMessage')) document.getElementById('reportEmptyMessage').classList.add('hidden');
+                    missingRecords.sort((a, b) => {
+                        // เรียงตามวันที่ก่อน แล้วค่อยเรียงตามชื่อครู
+                        let dateAStr = a.date.split('/').reverse().join('');
+                        let dateBStr = b.date.split('/').reverse().join('');
+                        if (dateAStr !== dateBStr) return dateAStr.localeCompare(dateBStr);
+                        return a.teacher.localeCompare(b.teacher);
+                    });
+
+                    missingRecords.forEach((rec, index) => {
+                        tbodyHTML += `
+                            <tr class="bg-white border-b hover:bg-red-50 transition">
+                                <td class="px-4 py-2 text-center text-gray-500">${index + 1}</td>
+                                <td class="px-4 py-2 font-semibold text-gray-800">${rec.date}</td>
+                                <td class="px-4 py-2 text-blue-700 font-bold">${rec.teacher}</td>
+                                <td class="px-4 py-2 text-gray-700">${rec.task} <br><span class="text-xs text-gray-500">เป้าหมาย: ${rec.target}</span></td>
+                                <td class="px-4 py-2 text-center">
+                                    <span class="px-3 py-1 rounded-full text-xs font-bold shadow-sm bg-red-100 border border-red-200 text-red-700">ยังไม่บันทึก</span>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                }
+                
+                document.getElementById('reportDetailBody').innerHTML = tbodyHTML;
+                document.getElementById('reportDetailContainer').classList.remove('hidden');
+                document.getElementById('reportStatusSummary').classList.add('hidden');
+                
+                return; // จบการทำงานสำหรับรายงานประเภทตรวจสอบการบันทึก
+            }
+            // ------------------------------------------
+
+            // รีเซ็ตหัวตารางกลับเป็นค่าเริ่มต้น (สำหรับรายงานปกติอื่นๆ)
+            const theadTr = document.querySelector('#reportDetailContainer thead tr');
+            theadTr.innerHTML = `
+                <th class="px-4 py-3 w-16 text-center border-b">ลำดับ</th>
+                <th class="px-4 py-3 w-24 border-b">รหัส</th>
+                <th class="px-4 py-3 border-b">ชื่อ-สกุล</th>
+                <th class="px-4 py-3 w-24 border-b">ชั้น/ห้อง</th>
+                <th class="px-4 py-3 text-center border-b">สถานะ</th>
+            `;
 
             let logsToSearch = type === 'routine' ? (allReportDataCache.routineLogs || []) : (allReportDataCache.classLogs || []);
             let compiledRecords = [];
@@ -6293,8 +6944,15 @@
                     else rowItemName = "ไม่ระบุวิชา";
                 }
                 
-                // เทียบวันที่
-                if(getStandardDate(dateVal) === targetDateNormalized && String(rowItemName).trim() === String(item).trim()) {
+                // เทียบวันที่แบบช่วง
+                let rowDateStr = getStandardDate(dateVal);
+                if (!rowDateStr) return;
+                let p = rowDateStr.split('/');
+                if (p.length !== 3) return;
+                let rDateObj = new Date(parseInt(p[2])-543, parseInt(p[1])-1, parseInt(p[0]));
+                rDateObj.setHours(12,0,0,0);
+
+                if(rDateObj >= dateRange.start && rDateObj <= dateRange.end && String(rowItemName).trim() === String(item).trim()) {
                     let jsonStr = row['ข้อมูลการเช็คชื่อ'] || row['ข้อมูลเช็คชื่อ'] || row['รายละเอียด'];
                     
                     // ถ้ารูปแบบเป็น JSON Array (ระบบใหม่)
@@ -6329,7 +6987,10 @@
                 showToast('ไม่พบรายละเอียดการเช็คชื่อสำหรับรายการนี้', 'info');
                 document.getElementById('reportDetailContainer').classList.add('hidden');
                 document.getElementById('reportStatusSummary').classList.add('hidden');
+                if(document.getElementById('reportEmptyMessage')) document.getElementById('reportEmptyMessage').classList.remove('hidden');
                 return;
+            } else {
+                if(document.getElementById('reportEmptyMessage')) document.getElementById('reportEmptyMessage').classList.add('hidden');
             }
 
             let summary = {};
@@ -6421,7 +7082,7 @@
             document.getElementById('reportDetailContainer').classList.remove('hidden');
         }
 
-        function updateDormStats(targetDateStr, allStudents, allLeaves) {
+        function updateDormStatsRange(dateRange, allStudents, allLeaves) {
             let totalStudents = 0;
             if(allStudents) {
                 allStudents.forEach(s => {
@@ -6430,97 +7091,91 @@
             }
             
             let leaveIds = new Set();
-            let parts = targetDateStr.split('/');
-            if(parts.length === 3) {
-                let tDay = parseInt(parts[0], 10);
-                let tMonth = parseInt(parts[1], 10) - 1;
-                let tYear = parseInt(parts[2], 10) - 543;
-                let targetDateObj = new Date(tYear, tMonth, tDay);
-                targetDateObj.setHours(0,0,0,0);
+            
+            if(allLeaves) {
+                allLeaves.forEach(leave => {
+                    // กรองเฉพาะรายการที่อนุมัติแล้วมาหักลบ
+                    if(leave['สถานะ'] && leave['สถานะ'] !== 'อนุมัติแล้ว') return;
 
-                if(allLeaves) {
-                    allLeaves.forEach(leave => {
-                        // กรองเฉพาะรายการที่อนุมัติแล้วมาหักลบ
-                        if(leave['สถานะ'] && leave['สถานะ'] !== 'อนุมัติแล้ว') return;
-
-                        let startStr = leave['ตั้งแต่วันที่'] || leave['วันที่ลา'];
-                        let endStr = leave['ถึงวันที่'];
-                        if(startStr) {
-                            let pStart = startStr.split('/');
-                            if(pStart.length === 3) {
-                                let dStart = new Date(parseInt(pStart[2])-543, parseInt(pStart[1])-1, parseInt(pStart[0]));
-                                dStart.setHours(0,0,0,0);
-                                
-                                let dEnd = dStart;
-                                if(endStr && endStr !== '-') {
-                                    let pEnd = endStr.split('/');
-                                    if(pEnd.length === 3) {
-                                        dEnd = new Date(parseInt(pEnd[2])-543, parseInt(pEnd[1])-1, parseInt(pEnd[0]));
-                                        dEnd.setHours(23,59,59,999);
-                                    }
-                                } else {
+                    let startStr = leave['ตั้งแต่วันที่'] || leave['วันที่ลา'];
+                    let endStr = leave['ถึงวันที่'];
+                    if(startStr) {
+                        let pStart = startStr.split('/');
+                        if(pStart.length === 3) {
+                            let dStart = new Date(parseInt(pStart[2])-543, parseInt(pStart[1])-1, parseInt(pStart[0]));
+                            dStart.setHours(0,0,0,0);
+                            
+                            let dEnd = dStart;
+                            if(endStr && endStr !== '-') {
+                                let pEnd = endStr.split('/');
+                                if(pEnd.length === 3) {
+                                    dEnd = new Date(parseInt(pEnd[2])-543, parseInt(pEnd[1])-1, parseInt(pEnd[0]));
                                     dEnd.setHours(23,59,59,999);
                                 }
-                                
-                                if(targetDateObj >= dStart && targetDateObj <= dEnd) {
-                                    let stList = leave['รหัส/ชื่อนักเรียน'] || leave['นักเรียน'] || '';
-                                    if(stList) {
-                                        let sts = stList.split(',');
-                                        sts.forEach(s => {
-                                            let sid = s.split('-')[0].trim();
-                                            leaveIds.add(sid);
-                                        });
-                                    }
+                            } else {
+                                dEnd.setHours(23,59,59,999);
+                            }
+                            
+                            // เช็คว่าการลาคาบเกี่ยว (Overlap) กับช่วงวันที่ที่ค้นหาหรือไม่
+                            if(dateRange.end >= dStart && dateRange.start <= dEnd) {
+                                let stList = leave['รหัส/ชื่อนักเรียน'] || leave['นักเรียน'] || '';
+                                if(stList) {
+                                    let sts = stList.split(',');
+                                    sts.forEach(s => {
+                                        let sid = s.split('-')[0].trim();
+                                        leaveIds.add(sid);
+                                    });
                                 }
                             }
                         }
-                    });
-                }
+                    }
+                });
             }
-            let leavesToday = leaveIds.size;
+            let leavesCount = leaveIds.size;
             
-            // ดึงข้อมูลเช็คชื่อ "ไม่อยู่" จากชีตกิจวัตรที่มีการเช็คในวันนั้นๆ เพื่อนำมาหักลบ
+            // ดึงข้อมูลเช็คชื่อ "ไม่อยู่" จากชีตกิจวัตรที่มีการเช็คในช่วงนั้นๆ เพื่อนำมาหักลบ
             let absentIds = new Set();
             if (allReportDataCache && allReportDataCache.routineLogs) {
                  allReportDataCache.routineLogs.forEach(log => {
                       let rDate = log['วันที่'];
-                      let formattedLogDate = "";
-                      if (rDate) {
-                          if (rDate.indexOf('-') > -1) { 
-                              let dParts = rDate.split(' ')[0].split('-');
-                              if(dParts.length === 3) {
-                                  let y = parseInt(dParts[0], 10);
-                                  if(y < 2400) y += 543;
-                                  formattedLogDate = parseInt(dParts[2], 10) + "/" + parseInt(dParts[1], 10) + "/" + y;
-                              }
-                          } else if (rDate.indexOf('/') > -1) {
-                              let dParts = rDate.split(' ')[0].split('/');
-                              if(dParts.length === 3) {
-                                  let p1 = parseInt(dParts[0], 10);
-                                  let p2 = parseInt(dParts[1], 10);
-                                  let p3 = parseInt(dParts[2], 10);
-                                  let dy, m, y;
-                                  if(p1 > 1000) { y = p1; m = p2; dy = p3; } else { dy = p1; m = p2; y = p3; }
-                                  if(y < 2400) y += 543;
-                                  formattedLogDate = dy + "/" + m + "/" + y;
-                              }
-                          } else {
-                              formattedLogDate = rDate;
+                      if (!rDate) return;
+                      
+                      let rDateObj = null;
+                      if (rDate.indexOf('-') > -1) { 
+                          let dParts = rDate.split(' ')[0].split('-');
+                          if(dParts.length === 3) {
+                              let y = parseInt(dParts[0], 10);
+                              if(y < 2400) y += 543;
+                              rDateObj = new Date(y-543, parseInt(dParts[1], 10)-1, parseInt(dParts[2], 10));
                           }
+                      } else if (rDate.indexOf('/') > -1) {
+                          let dParts = rDate.split(' ')[0].split('/');
+                          if(dParts.length === 3) {
+                              let p1 = parseInt(dParts[0], 10);
+                              let p2 = parseInt(dParts[1], 10);
+                              let p3 = parseInt(dParts[2], 10);
+                              let dy, m, y;
+                              if(p1 > 1000) { y = p1; m = p2; dy = p3; } else { dy = p1; m = p2; y = p3; }
+                              if(y < 2400) y += 543;
+                              rDateObj = new Date(y-543, m-1, dy);
+                          }
+                      } else {
+                          rDateObj = new Date(rDate);
                       }
                       
-                      // หาชื่อกิจวัตรเพื่อเช็คว่าเป็นกิจวัตรหอพักหรือไม่ (ดึงเฉพาะที่มีคำว่า "อยู่หอ")
+                      if (!rDateObj || isNaN(rDateObj.getTime())) return;
+                      rDateObj.setHours(12,0,0,0);
+                      
                       let routineName = log['กิจวัตร'] || log['รายการกิจวัตร'] || log['รายการ'] || '';
                       let isDormRoutine = String(routineName).includes('อยู่หอ');
                       
-                      if (formattedLogDate === targetDateStr || rDate === targetDateStr) {
+                      if (rDateObj >= dateRange.start && rDateObj <= dateRange.end) {
                           // กรองเอาเฉพาะข้อมูลเช็คชื่อที่มาจากกิจวัตร "อยู่หอ" เท่านั้น
                           if (isDormRoutine) {
                               try {
                                   let records = JSON.parse(log['ข้อมูลการเช็คชื่อ']);
                                   records.forEach(rec => {
                                       let status = rec.status;
-                                      // หักลบเฉพาะสถานะที่ไม่อยู่จริงๆ ในหอพัก (ไม่เอาสถานะขาดเรียน/ไม่ละหมาด มาปน)
                                       if (status === 'ไม่อยู่' || status === 'หนี') {
                                           if (rec.studentId) absentIds.add(String(rec.studentId).trim());
                                       }
@@ -6535,9 +7190,25 @@
             let presentStudents = totalStudents - totalAbsentOrLeave.size;
             if (presentStudents < 0) presentStudents = 0;
             
-            animateValue("statTotalStudents", 0, totalStudents, 500);
-            animateValue("statLeaveStudents", 0, leavesToday, 500);
-            animateValue("statPresentStudents", 0, presentStudents, 500);
+            // เปลี่ยน Text Label ให้เหมาะสมกับ Date Range
+            const filterType = document.getElementById('report_date_filter').value;
+            const labelLeave = document.querySelector('#dormStatsContainer > div:nth-child(2) > p.text-sm');
+            const labelPresent = document.querySelector('#dormStatsContainer > div:nth-child(3) > p.text-sm');
+            
+            if(filterType === 'today') {
+                if(labelLeave) labelLeave.innerText = "นักเรียนที่แจ้งลาในวันนี้";
+                if(labelPresent) labelPresent.innerText = "นักเรียนที่อยู่หอพักวันนี้ (คงเหลือ)";
+            } else if (filterType === 'yesterday') {
+                if(labelLeave) labelLeave.innerText = "นักเรียนที่แจ้งลาเมื่อวาน";
+                if(labelPresent) labelPresent.innerText = "นักเรียนที่อยู่หอพักเมื่อวาน (คงเหลือ)";
+            } else {
+                if(labelLeave) labelLeave.innerText = "นักเรียนที่ลาในช่วงเวลานี้";
+                if(labelPresent) labelPresent.innerText = "อยู่หอพักในช่วงเวลานี้ (เฉลี่ย)";
+            }
+            
+            animateValue("statTotalStudents", parseInt(document.getElementById("statTotalStudents").innerText) || 0, totalStudents, 500);
+            animateValue("statLeaveStudents", parseInt(document.getElementById("statLeaveStudents").innerText) || 0, leavesCount, 500);
+            animateValue("statPresentStudents", parseInt(document.getElementById("statPresentStudents").innerText) || 0, presentStudents, 500);
         }
 
         // ฟังก์ชันช่วยทำ Animation ตัวเลข
@@ -6563,7 +7234,18 @@
 
         function exportReportToExcel() {
             const title = document.getElementById('reportDetailTitle').innerText.replace('รายละเอียด: ', '');
-            const dateInput = document.getElementById('reportFilterDate').value;
+            
+            let dateStr = "";
+            const filterType = document.getElementById('report_date_filter').value;
+            if (filterType === 'custom') {
+                dateStr = document.getElementById('report_start_date').value + " ถึง " + document.getElementById('report_end_date').value;
+            } else if (filterType === 'yesterday') {
+                const d = new Date(); d.setDate(d.getDate() - 1);
+                dateStr = d.toLocaleDateString('th-TH');
+            } else {
+                dateStr = new Date().toLocaleDateString('th-TH');
+            }
+
             const table = document.querySelector('#reportDetailContainer table');
             
             // สร้าง html สำหรับ Excel
@@ -6572,7 +7254,7 @@
             <head><meta charset="UTF-8"></head>
             <body>
                 <h2>รายงานเช็คชื่อ: ${title}</h2>
-                <p>วันที่: ${dateInput}</p>
+                <p>วันที่: ${dateStr}</p>
                 ${table.outerHTML}
             </body>
             </html>`;
@@ -6582,7 +7264,7 @@
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
-            link.download = `รายงานเช็คชื่อ_${title}_${dateInput}.xls`;
+            link.download = `รายงานเช็คชื่อ_${title}_${dateStr}.xls`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
