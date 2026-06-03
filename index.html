@@ -1559,12 +1559,31 @@
 
                         <!-- ตารางประวัติการลา -->
                         <div class="mt-8 border-t border-gray-200 pt-6">
-                            <h3 class="font-bold text-lg mb-4 text-rsct-dark"><i class="fas fa-history text-rsct-red mr-2"></i> ประวัติการแจ้งลาล่าสุด</h3>
+                            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
+                                <h3 class="font-bold text-lg text-rsct-dark"><i class="fas fa-history text-rsct-red mr-2"></i> ประวัติการแจ้งลาล่าสุด</h3>
+                                
+                                <!-- เพิ่มตัวกรองวันที่สำหรับประวัติการลา -->
+                                <div class="flex flex-wrap items-center gap-2 bg-white p-2 rounded-lg shadow-sm border border-gray-100 w-full md:w-auto">
+                                    <select id="leave_history_date_filter" onchange="handleLeaveHistoryFilterChange()" class="border-none bg-gray-50 rounded px-3 py-1.5 text-sm font-semibold text-gray-700 focus:ring-0 cursor-pointer outline-none">
+                                        <option value="all">ทั้งหมด</option>
+                                        <option value="today">วันนี้</option>
+                                        <option value="yesterday">เมื่อวาน</option>
+                                        <option value="custom">กำหนดช่วงวันที่...</option>
+                                    </select>
+                                    <div id="leave_history_custom_date_div" class="hidden flex items-center gap-2">
+                                        <input type="date" id="leave_history_start_date" class="border rounded px-2 py-1 text-sm text-gray-600 focus:border-rsct-red focus:ring-1 focus:ring-rsct-red outline-none">
+                                        <span class="text-gray-400">-</span>
+                                        <input type="date" id="leave_history_end_date" class="border rounded px-2 py-1 text-sm text-gray-600 focus:border-rsct-red focus:ring-1 focus:ring-rsct-red outline-none">
+                                    </div>
+                                    <button type="button" onclick="fetchLeaveRecords()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-sm font-bold shadow-sm transition-colors"><i class="fas fa-search mr-1"></i> กรองข้อมูล</button>
+                                </div>
+                            </div>
+                            
                             <div class="overflow-x-auto border rounded-lg shadow-sm">
                                 <table class="w-full text-sm text-left whitespace-nowrap" id="leaveHistoryTable">
                                     <thead>
                                         <tr>
-                                            <th class="p-3 border-r w-32">วันที่บันทึก</th>
+                                            <th class="p-3 border-r w-32">วันที่กรอกลา</th>
                                             <th class="p-3 border-r w-40 text-center">ช่วงวันที่ลา</th>
                                             <th class="p-3 border-r">รหัส/ชื่อนักเรียน</th>
                                             <th class="p-3 border-r w-24 text-center">ประเภทลา</th>
@@ -6358,6 +6377,20 @@
             }
         }
 
+        // ฟังก์ชันควบคุมการซ่อน/แสดงช่องเลือกวันที่ของประวัติการลา
+        function handleLeaveHistoryFilterChange() {
+            const filter = document.getElementById('leave_history_date_filter').value;
+            const customDiv = document.getElementById('leave_history_custom_date_div');
+            if (filter === 'custom') {
+                customDiv.classList.remove('hidden');
+                document.getElementById('leave_history_start_date').valueAsDate = new Date();
+                document.getElementById('leave_history_end_date').valueAsDate = new Date();
+            } else {
+                customDiv.classList.add('hidden');
+                fetchLeaveRecords(); // โหลดข้อมูลทันทีเมื่อเปลี่ยนกลับไปเป็น ทั้งหมด/วันนี้/เมื่อวาน
+            }
+        }
+
         function fetchLeaveRecords() {
             const tbody = document.querySelector('#leaveHistoryTable tbody');
             const thAction = document.getElementById('th_leave_action');
@@ -6378,7 +6411,82 @@
                     }
                     if(tbody) {
                         tbody.innerHTML = '';
+                        
+                        // จัดกลุ่มข้อมูลการลาที่มีรหัสนักเรียน วันที่บันทึก(เฉพาะวัน) และประเภทเดียวกัน
+                        let groupedData = [];
+                        let groupMap = {};
+                        
                         res.data.forEach(item => {
+                            // จัดกลุ่มโดยใช้วันที่กรอกลา + รหัสนักเรียน + ประเภทลา
+                            let recDateOnly = item.leaveDate ? item.leaveDate.split(' ')[0] : '-';
+                            let key = recDateOnly + "_" + item.student + "_" + item.type;
+                            
+                            if (!groupMap[key]) {
+                                groupMap[key] = {
+                                    ...item,
+                                    rowIndices: [item.rowIndex],
+                                    totalDays: parseInt(item.days) || 1,
+                                    statuses: [item.status]
+                                };
+                                groupedData.push(groupMap[key]);
+                            } else {
+                                groupMap[key].rowIndices.push(item.rowIndex);
+                                groupMap[key].totalDays += parseInt(item.days) || 1;
+                                groupMap[key].statuses.push(item.status);
+                                // ปรับวันสิ้นสุดการลาให้เป็นวันล่าสุดในกลุ่ม
+                                let currentEnd = (item.endDate && item.endDate !== '-') ? item.endDate : item.startDate;
+                                groupMap[key].endDate = currentEnd;
+                            }
+                        });
+
+                        // กรองข้อมูลการลาตามตัวกรองวันที่
+                        const filterType = document.getElementById('leave_history_date_filter') ? document.getElementById('leave_history_date_filter').value : 'all';
+                        let dStart = null;
+                        let dEnd = null;
+
+                        if (filterType === 'today') {
+                            dStart = new Date(); dStart.setHours(0,0,0,0);
+                            dEnd = new Date(); dEnd.setHours(23,59,59,999);
+                        } else if (filterType === 'yesterday') {
+                            dStart = new Date(); dStart.setDate(dStart.getDate() - 1); dStart.setHours(0,0,0,0);
+                            dEnd = new Date(); dEnd.setDate(dEnd.getDate() - 1); dEnd.setHours(23,59,59,999);
+                        } else if (filterType === 'custom') {
+                            const sVal = document.getElementById('leave_history_start_date').value;
+                            const eVal = document.getElementById('leave_history_end_date').value;
+                            if (sVal) { dStart = new Date(sVal); dStart.setHours(0,0,0,0); }
+                            if (eVal) { dEnd = new Date(eVal); dEnd.setHours(23,59,59,999); }
+                        }
+
+                        let filteredGroupedData = groupedData;
+                        if (filterType !== 'all') {
+                            filteredGroupedData = groupedData.filter(item => {
+                                // ใช้วันที่กรอกลา (leaveDate) เป็นเกณฑ์ในการคัดกรอง
+                                if (item.leaveDate && item.leaveDate !== '-') {
+                                    let rDateStr = item.leaveDate.split(' ')[0]; // รูปแบบ DD/MM/YYYY
+                                    let pDate = rDateStr.split('/');
+                                    if (pDate.length === 3) {
+                                        let rYear = parseInt(pDate[2]);
+                                        if (rYear > 2400) rYear -= 543; // แปลง พ.ศ. เป็น ค.ศ.
+                                        let recordDateObj = new Date(rYear, parseInt(pDate[1]) - 1, parseInt(pDate[0]));
+                                        recordDateObj.setHours(12,0,0,0); // ตั้งเวลาเที่ยงเพื่อเลี่ยง Timezone issue
+
+                                        if (dStart && dEnd) {
+                                            return (recordDateObj >= dStart && recordDateObj <= dEnd);
+                                        } else if (dStart) {
+                                            return (recordDateObj >= dStart);
+                                        }
+                                    }
+                                }
+                                return false;
+                            });
+                        }
+
+                        if (filteredGroupedData.length === 0) {
+                            tbody.innerHTML = `<tr><td colspan="${colSpanCount}" class="p-8 text-center text-gray-500"><i class="fas fa-info-circle text-2xl mb-2 block"></i>ไม่พบประวัติการแจ้งลาตามเงื่อนไขวันที่เลือก</td></tr>`;
+                            return;
+                        }
+
+                        filteredGroupedData.forEach(item => {
                             let typeStyle = 'bg-gray-100 text-gray-800 border-gray-200';
                             if(item.type === 'ลาป่วย') typeStyle = 'bg-red-100 text-red-800 border-red-200';
                             else if(item.type === 'ลากิจ') typeStyle = 'bg-yellow-100 text-yellow-800 border-yellow-200';
@@ -6386,18 +6494,25 @@
                             else if(item.type === 'ลากลับบ้าน') typeStyle = 'bg-green-100 text-green-800 border-green-200';
 
                             let leavePeriod = '-';
-                            if (item.startDate !== '-' && item.endDate !== '-') {
+                            if (item.startDate !== item.endDate && item.endDate !== '-') {
                                 leavePeriod = `${item.startDate} - ${item.endDate}`;
                             } else if (item.startDate !== '-') {
                                 leavePeriod = item.startDate; 
                             }
 
-                            let statusText = item.status || 'รออนุมัติ';
+                            // กำหนดสถานะรวมของกลุ่ม
+                            let overallStatus = 'รออนุมัติ';
+                            if (item.statuses.every(s => s === 'อนุมัติแล้ว')) {
+                                overallStatus = 'อนุมัติแล้ว';
+                            } else if (item.statuses.some(s => s && s.includes('ไม่อนุมัติ'))) {
+                                overallStatus = item.statuses.find(s => s && s.includes('ไม่อนุมัติ'));
+                            }
+
                             let statusBadge = '';
-                            if (statusText === 'อนุมัติแล้ว') {
+                            if (overallStatus === 'อนุมัติแล้ว') {
                                 statusBadge = '<span class="text-green-600 font-bold"><i class="fas fa-check-circle"></i> อนุมัติแล้ว</span>';
-                            } else if (statusText.includes('ไม่อนุมัติ')) {
-                                statusBadge = `<span class="text-red-600 font-bold" title="${statusText}"><i class="fas fa-times-circle"></i> ไม่อนุมัติ</span>`;
+                            } else if (overallStatus.includes('ไม่อนุมัติ')) {
+                                statusBadge = `<span class="text-red-600 font-bold" title="${overallStatus}"><i class="fas fa-times-circle"></i> ไม่อนุมัติ</span>`;
                             } else {
                                 statusBadge = '<span class="text-yellow-600 font-bold"><i class="fas fa-clock"></i> รออนุมัติ</span>';
                             }
@@ -6405,17 +6520,19 @@
                             let actionTdHtml = '';
                             if (showActionCol) {
                                 let actionBtn = '-';
-                                if (statusText === 'รออนุมัติ') {
+                                let indicesStr = item.rowIndices.join(',');
+                                
+                                if (overallStatus === 'รออนุมัติ') {
                                     actionBtn = `
                                         <div class="flex flex-col gap-1">
-                                            <button onclick="approveLeaveItem(${item.rowIndex})" class="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-xs font-bold shadow-sm transition"><i class="fas fa-check"></i> อนุมัติ</button>
-                                            <button onclick="rejectLeaveItem(${item.rowIndex})" class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs font-bold shadow-sm transition"><i class="fas fa-times"></i> ไม่อนุมัติ</button>
+                                            <button onclick="approveLeaveItem('${indicesStr}')" class="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-xs font-bold shadow-sm transition"><i class="fas fa-check"></i> อนุมัติ</button>
+                                            <button onclick="rejectLeaveItem('${indicesStr}')" class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs font-bold shadow-sm transition"><i class="fas fa-times"></i> ไม่อนุมัติ</button>
                                         </div>
                                     `;
-                                } else if (statusText === 'อนุมัติแล้ว') {
+                                } else if (overallStatus === 'อนุมัติแล้ว') {
                                     actionBtn = `<span class="text-xs text-green-600 font-bold"><i class="fas fa-check"></i> อนุมัติแล้ว</span>`;
-                                } else if (statusText.includes('ไม่อนุมัติ')) {
-                                    actionBtn = `<span class="text-xs text-red-600 font-bold cursor-help" title="${statusText}"><i class="fas fa-info-circle"></i> ดูสาเหตุ</span>`;
+                                } else if (overallStatus.includes('ไม่อนุมัติ')) {
+                                    actionBtn = `<span class="text-xs text-red-600 font-bold cursor-help" title="${overallStatus}"><i class="fas fa-info-circle"></i> ดูสาเหตุ</span>`;
                                 }
                                 actionTdHtml = `<td class="p-3 text-center">${actionBtn}</td>`;
                             }
@@ -6428,7 +6545,7 @@
 
                             tbody.innerHTML += `
                                 <tr class="border-b hover:bg-gray-50 transition">
-                                    <td class="p-3 text-xs text-gray-500 border-r">${item.recordDate || '-'}</td>
+                                    <td class="p-3 text-xs text-gray-500 border-r">${item.leaveDate || '-'}</td>
                                     <td class="p-3 font-semibold text-rsct-dark border-r text-center text-xs whitespace-nowrap">${leavePeriod}</td>
                                     <td class="p-3 text-blue-800 border-r font-medium">
                                         <a href="javascript:void(0)" onclick="openStudentModal('${item.student}')" class="text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1">
@@ -6436,7 +6553,7 @@
                                         </a>
                                     </td>
                                     <td class="p-3 text-center border-r"><span class="px-2 py-1 rounded text-xs font-bold border ${typeStyle}">${item.type || '-'}</span></td>
-                                    <td class="p-3 text-center font-bold text-rsct-red border-r">${item.days || '-'}</td>
+                                    <td class="p-3 text-center font-bold text-rsct-red border-r">${item.totalDays || '-'}</td>
                                     <td class="p-3 text-gray-600 max-w-[200px] truncate border-r" title="${item.reason || ''}">${item.reason || '-'}</td>
                                     <td class="p-3 text-center border-r text-gray-700 text-xs">${item.recorder || '-'}</td>
                                     <td class="p-3 text-center border-r">${statusBadge}</td>
@@ -6451,53 +6568,63 @@
             });
         }
 
-        function approveLeaveItem(rowIndex) {
+        function approveLeaveItem(indicesStr) {
+            let rowIndices = indicesStr.split(',').map(n => parseInt(n.trim()));
             customConfirm("ยืนยันการอนุมัติการลารายการนี้ใช่หรือไม่?", function() {
                 showLoader(true);
-                sendPOST('updateLeaveStatus', { payload: JSON.stringify({ rowIndex: rowIndex, status: 'อนุมัติแล้ว' }) }, function(res) {
-                    showLoader(false);
-                    if(res.status === 'success') {
-                        showToast("อนุมัติการลาเรียบร้อยแล้ว", "success");
-                        fetchLeaveRecords(); 
-                        updateDashboardStats(); 
-                    } else {
-                        showToast("เกิดข้อผิดพลาด: " + res.message, "error");
-                    }
-                });
+                processLeaveStatusUpdate(rowIndices, 'อนุมัติแล้ว');
             });
         }
 
-        async function rejectLeaveItem(rowIndex) {
-            const { value: reason } = await Swal.fire({
-                title: 'ไม่อนุมัติการลา',
-                input: 'textarea',
-                inputLabel: 'ระบุสาเหตุที่ไม่อนุมัติ',
-                inputPlaceholder: 'พิมพ์สาเหตุที่นี่...',
-                showCancelButton: true,
-                confirmButtonText: 'ยืนยัน',
-                cancelButtonText: 'ยกเลิก',
-                confirmButtonColor: '#DC2626',
-                inputValidator: (value) => {
-                    if (!value) {
-                        return 'กรุณาระบุสาเหตุ!'
+        async function rejectLeaveItem(indicesStr) {
+            let rowIndices = indicesStr.split(',').map(n => parseInt(n.trim()));
+            
+            let reason = "";
+            if (typeof Swal !== 'undefined') {
+                const { value: swalReason } = await Swal.fire({
+                    title: 'ไม่อนุมัติการลา',
+                    input: 'textarea',
+                    inputLabel: 'ระบุสาเหตุที่ไม่อนุมัติ',
+                    inputPlaceholder: 'พิมพ์สาเหตุที่นี่...',
+                    showCancelButton: true,
+                    confirmButtonText: 'ยืนยัน',
+                    cancelButtonText: 'ยกเลิก',
+                    confirmButtonColor: '#DC2626',
+                    inputValidator: (value) => {
+                        if (!value) {
+                            return 'กรุณาระบุสาเหตุ!'
+                        }
                     }
-                }
-            });
+                });
+                reason = swalReason;
+            } else {
+                reason = prompt("ระบุสาเหตุที่ไม่อนุมัติการลา:");
+            }
 
             if (reason) {
                 const finalStatus = 'ไม่อนุมัติ: ' + reason;
                 showLoader(true);
-                sendPOST('updateLeaveStatus', { payload: JSON.stringify({ rowIndex: rowIndex, status: finalStatus }) }, function(res) {
-                    showLoader(false);
-                    if(res.status === 'success') {
-                        showToast("บันทึกการไม่อนุมัติเรียบร้อยแล้ว", "success");
-                        fetchLeaveRecords(); 
-                        updateDashboardStats(); 
-                    } else {
-                        showToast("เกิดข้อผิดพลาด: " + res.message, "error");
-                    }
-                });
+                processLeaveStatusUpdate(rowIndices, finalStatus);
             }
+        }
+
+        function processLeaveStatusUpdate(rowIndices, status) {
+            if(!rowIndices || rowIndices.length === 0) {
+                showLoader(false);
+                showToast("อัปเดตสถานะการลาเรียบร้อยแล้ว", "success");
+                fetchLeaveRecords(); 
+                updateDashboardStats(); 
+                return;
+            }
+            let idx = rowIndices.shift();
+            sendPOST('updateLeaveStatus', { payload: JSON.stringify({ rowIndex: idx, status: status }) }, function(res) {
+                if(res.status === 'success') {
+                    processLeaveStatusUpdate(rowIndices, status);
+                } else {
+                    showLoader(false);
+                    showToast("เกิดข้อผิดพลาดในการบันทึกบางรายการ", "error");
+                }
+            });
         }
 
         // --- เพิ่มฟังก์ชันจัดการป๊อปอัพข้อมูลนักเรียน ---
@@ -6785,7 +6912,7 @@
 
             // --- ใหม่: ลอจิกสำหรับรายงานตรวจสอบการบันทึกของครู ---
             if (type === 'teacher_entry') {
-                let missingRecords = [];
+                let teacherRecords = []; // เปลี่ยนชื่อตัวแปรเพื่อเก็บข้อมูลทั้งที่บันทึกแล้วและยังไม่บันทึก
                 let currentDate = new Date(dateRange.start);
                 
                 const dFormat = (d) => `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear() < 2400 ? d.getFullYear()+543 : d.getFullYear()}`;
@@ -6811,11 +6938,11 @@
                                     }
                                 }
                             }
-                            if (!isRecorded) {
-                                missingRecords.push({
-                                    date: dateStr, task: routineName, target: duty.room || 'ทั้งหมด', teacher: duty.teachers || 'ไม่ระบุ'
-                                });
-                            }
+                            
+                            // เก็บข้อมูลทั้งหมด ไม่ว่าจะบันทึกแล้ว หรือ ยังไม่บันทึก
+                            teacherRecords.push({
+                                date: dateStr, task: routineName, target: duty.room || 'ทั้งหมด', teacher: duty.teachers || 'ไม่ระบุ', isRecorded: isRecorded
+                            });
                         });
                     } else if (item === 'class') {
                         const expectedClasses = teachingScheduleList.filter(c => c.day === dayName);
@@ -6839,11 +6966,11 @@
                                     }
                                 }
                             }
-                            if (!isRecorded) {
-                                missingRecords.push({
-                                    date: dateStr, task: `คาบ ${period}: ${subj}`, target: room, teacher: cls.teacher || 'ไม่ระบุ'
-                                });
-                            }
+                            
+                            // เก็บข้อมูลทั้งหมด ไม่ว่าจะบันทึกแล้ว หรือ ยังไม่บันทึก
+                            teacherRecords.push({
+                                date: dateStr, task: `คาบ ${period}: ${subj}`, target: room, teacher: cls.teacher || 'ไม่ระบุ', isRecorded: isRecorded
+                            });
                         });
                     }
                     currentDate.setDate(currentDate.getDate() + 1);
@@ -6862,28 +6989,42 @@
                 `;
 
                 let tbodyHTML = '';
-                if (missingRecords.length === 0) {
-                    tbodyHTML = `<tr><td colspan="5" class="px-4 py-8 text-center text-green-600 font-bold"><i class="fas fa-check-circle text-2xl mb-2 block"></i> ไม่พบรายการค้างบันทึก (บันทึกครบถ้วนแล้ว)</td></tr>`;
+                if (teacherRecords.length === 0) {
+                    tbodyHTML = `<tr><td colspan="5" class="px-4 py-8 text-center text-gray-500 font-bold"><i class="fas fa-info-circle text-2xl mb-2 block"></i> ไม่พบรายการที่ต้องบันทึกในช่วงวันที่เลือก</td></tr>`;
                     if(document.getElementById('reportEmptyMessage')) document.getElementById('reportEmptyMessage').classList.add('hidden');
                 } else {
                     if(document.getElementById('reportEmptyMessage')) document.getElementById('reportEmptyMessage').classList.add('hidden');
-                    missingRecords.sort((a, b) => {
-                        // เรียงตามวันที่ก่อน แล้วค่อยเรียงตามชื่อครู
+                    
+                    teacherRecords.sort((a, b) => {
+                        // 1. เรียงตามวันที่
                         let dateAStr = a.date.split('/').reverse().join('');
                         let dateBStr = b.date.split('/').reverse().join('');
                         if (dateAStr !== dateBStr) return dateAStr.localeCompare(dateBStr);
+                        
+                        // 2. เรียงเอาคนที่ "ยังไม่บันทึก" (false) ขึ้นก่อน "บันทึกแล้ว" (true)
+                        if (a.isRecorded !== b.isRecorded) return a.isRecorded ? 1 : -1;
+                        
+                        // 3. เรียงตามชื่อครู
                         return a.teacher.localeCompare(b.teacher);
                     });
 
-                    missingRecords.forEach((rec, index) => {
+                    teacherRecords.forEach((rec, index) => {
+                        // สร้างป้ายกำกับสถานะ
+                        let statusBadge = rec.isRecorded 
+                            ? `<span class="px-3 py-1 rounded-full text-xs font-bold shadow-sm bg-green-100 border border-green-200 text-green-700"><i class="fas fa-check"></i> บันทึกแล้ว</span>`
+                            : `<span class="px-3 py-1 rounded-full text-xs font-bold shadow-sm bg-red-100 border border-red-200 text-red-700"><i class="fas fa-times"></i> ยังไม่บันทึก</span>`;
+                        
+                        // กำหนดสีพื้นหลังตารางเมื่อเอาเมาส์ชี้
+                        let rowClass = rec.isRecorded ? "bg-white border-b hover:bg-green-50" : "bg-red-50 border-b hover:bg-red-100";
+
                         tbodyHTML += `
-                            <tr class="bg-white border-b hover:bg-red-50 transition">
+                            <tr class="${rowClass} transition">
                                 <td class="px-4 py-2 text-center text-gray-500">${index + 1}</td>
                                 <td class="px-4 py-2 font-semibold text-gray-800">${rec.date}</td>
                                 <td class="px-4 py-2 text-blue-700 font-bold">${rec.teacher}</td>
                                 <td class="px-4 py-2 text-gray-700">${rec.task} <br><span class="text-xs text-gray-500">เป้าหมาย: ${rec.target}</span></td>
                                 <td class="px-4 py-2 text-center">
-                                    <span class="px-3 py-1 rounded-full text-xs font-bold shadow-sm bg-red-100 border border-red-200 text-red-700">ยังไม่บันทึก</span>
+                                    ${statusBadge}
                                 </td>
                             </tr>
                         `;
