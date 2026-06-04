@@ -2086,6 +2086,23 @@
                         <option value="">-- กำลังโหลดข้อมูล... --</option>
                     </select>
                 </div>
+                
+                <!-- [ดรอปดาวน์สำหรับเลือกกิจวัตร ในรายงานตรวจสอบครูเวร] -->
+                <div id="reportSpecificRoutineContainer" class="hidden">
+                    <label class="block text-sm font-bold text-gray-800 mb-1">2.1 เจาะจงเลือกกิจวัตร</label>
+                    <select id="reportFilterSpecificRoutine" class="w-full px-3 py-2 border rounded-lg focus:ring-1 focus:ring-red-500 font-semibold text-purple-700 bg-white">
+                        <option value="">-- ดึงรายชื่อกิจวัตรทั้งหมด --</option>
+                    </select>
+                </div>
+
+                <!-- [เพิ่มใหม่: ดรอปดาวน์สำหรับเลือกคาบเรียน ในรายงานตรวจสอบครูสอน] -->
+                <div id="reportSpecificClassPeriodContainer" class="hidden">
+                    <label class="block text-sm font-bold text-gray-800 mb-1">2.1 เจาะจงเลือกคาบเรียน</label>
+                    <select id="reportFilterSpecificClassPeriod" class="w-full px-3 py-2 border rounded-lg focus:ring-1 focus:ring-red-500 font-semibold text-indigo-700 bg-white">
+                        <option value="">-- ทุกคาบเรียน --</option>
+                    </select>
+                </div>
+
                 <div class="md:col-span-2 opacity-50 pointer-events-none transition-opacity" id="reportDateFilterContainer">
                     <label class="block text-sm font-bold text-gray-800 mb-1">3. เลือกช่วงวันที่</label>
                     <div class="flex flex-col sm:flex-row gap-2">
@@ -6696,6 +6713,8 @@
             const dateContainer = document.getElementById('reportDateFilterContainer');
             const submitContainer = document.getElementById('reportSubmitContainer');
             const itemSelect = document.getElementById('reportFilterItem');
+            const specificRoutineContainer = document.getElementById('reportSpecificRoutineContainer');
+            const specificClassPeriodContainer = document.getElementById('reportSpecificClassPeriodContainer');
 
             if (type) {
                 // เปิด Container ฟอร์มย่อย
@@ -6707,6 +6726,8 @@
                 // ปิดวันที่และปุ่มค้นหาไว้ก่อน จนกว่าจะเลือกรายการ
                 if(dateContainer) dateContainer.classList.add('opacity-50', 'pointer-events-none');
                 if(submitContainer) submitContainer.classList.add('opacity-50', 'pointer-events-none');
+                if(specificRoutineContainer) specificRoutineContainer.classList.add('hidden');
+                if(specificClassPeriodContainer) specificClassPeriodContainer.classList.add('hidden');
                 
                 loadReportOptions();
             } else {
@@ -6716,6 +6737,8 @@
                 if(itemContainer) itemContainer.classList.add('opacity-50', 'pointer-events-none');
                 if(dateContainer) dateContainer.classList.add('opacity-50', 'pointer-events-none');
                 if(submitContainer) submitContainer.classList.add('opacity-50', 'pointer-events-none');
+                if(specificRoutineContainer) specificRoutineContainer.classList.add('hidden');
+                if(specificClassPeriodContainer) specificClassPeriodContainer.classList.add('hidden');
                 if(itemSelect) itemSelect.innerHTML = '<option value="">-- กรุณาเลือกประเภทรายงานก่อน --</option>';
                 
                 document.getElementById('reportDetailContainer').classList.add('hidden');
@@ -6725,17 +6748,60 @@
         }
 
         function handleReportItemChange() {
+            const type = document.getElementById('reportFilterType').value;
             const item = document.getElementById('reportFilterItem').value;
             const dateContainer = document.getElementById('reportDateFilterContainer');
             const submitContainer = document.getElementById('reportSubmitContainer');
+            const specificRoutineContainer = document.getElementById('reportSpecificRoutineContainer');
+            const specificClassPeriodContainer = document.getElementById('reportSpecificClassPeriodContainer');
             
             if (item) {
                 // ขั้นที่ 3: เปิดให้เลือกวันที่และกดค้นหา
                 if(dateContainer) dateContainer.classList.remove('opacity-50', 'pointer-events-none');
                 if(submitContainer) submitContainer.classList.remove('opacity-50', 'pointer-events-none');
+                
+                // แสดงตัวเลือกกิจวัตรเจาะจง ถ้าอยู่ในโหมดตรวจครูเวรและตรวจกิจวัตร
+                if (type === 'teacher_entry' && item === 'routine') {
+                    if(specificRoutineContainer) specificRoutineContainer.classList.remove('hidden');
+                    if(specificClassPeriodContainer) specificClassPeriodContainer.classList.add('hidden');
+                    
+                    const specificRoutineSelect = document.getElementById('reportFilterSpecificRoutine');
+                    if (specificRoutineSelect) {
+                        specificRoutineSelect.innerHTML = '<option value="">-- ดึงรายชื่อกิจวัตรทั้งหมด --</option>';
+                        if (teacherDutyList && teacherDutyList.length > 0) {
+                            const uniqueRoutines = new Set(teacherDutyList.map(d => d.routine).filter(r => r && r !== '-'));
+                            uniqueRoutines.forEach(rName => {
+                                specificRoutineSelect.innerHTML += `<option value="${rName}">${rName}</option>`;
+                            });
+                        }
+                    }
+                } else if (type === 'teacher_entry' && item === 'class') {
+                    // แสดงตัวเลือกคาบเรียน ถ้าอยู่ในโหมดตรวจการสอน
+                    if(specificRoutineContainer) specificRoutineContainer.classList.add('hidden');
+                    if(specificClassPeriodContainer) specificClassPeriodContainer.classList.remove('hidden');
+                    
+                    const specificClassSelect = document.getElementById('reportFilterSpecificClassPeriod');
+                    if (specificClassSelect) {
+                        specificClassSelect.innerHTML = '<option value="">-- ทุกคาบเรียน --</option>';
+                        if (systemPeriodsList && systemPeriodsList.length > 0) {
+                            systemPeriodsList.forEach(p => {
+                                specificClassSelect.innerHTML += `<option value="${p.period}">คาบ ${p.period} (${p.start}-${p.end})</option>`;
+                            });
+                        } else {
+                            for(let i=1; i<=9; i++) {
+                                specificClassSelect.innerHTML += `<option value="${i}">คาบ ${i}</option>`;
+                            }
+                        }
+                    }
+                } else {
+                    if(specificRoutineContainer) specificRoutineContainer.classList.add('hidden');
+                    if(specificClassPeriodContainer) specificClassPeriodContainer.classList.add('hidden');
+                }
             } else {
                 if(dateContainer) dateContainer.classList.add('opacity-50', 'pointer-events-none');
                 if(submitContainer) submitContainer.classList.add('opacity-50', 'pointer-events-none');
+                if(specificRoutineContainer) specificRoutineContainer.classList.add('hidden');
+                if(specificClassPeriodContainer) specificClassPeriodContainer.classList.add('hidden');
             }
         }
 
@@ -6923,10 +6989,16 @@
                     let dayName = daysThai[currentDate.getDay()];
 
                     if (item === 'routine') {
+                        const specificRoutineFilter = document.getElementById('reportFilterSpecificRoutine').value;
                         const expectedDuties = teacherDutyList.filter(d => d.days === 'ทุกวัน' || (d.days && d.days.includes(dayName)));
                         expectedDuties.forEach(duty => {
                             let isRecorded = false;
                             const routineName = duty.routine;
+                            
+                            // ถ้ามีการเลือกกรองกิจวัตรเจาะจง ให้ข้ามอันที่ไม่ตรง
+                            if (specificRoutineFilter && String(routineName).trim() !== String(specificRoutineFilter).trim()) {
+                                return;
+                            }
                             
                             if (allReportDataCache && allReportDataCache.routineLogs) {
                                 for (let log of allReportDataCache.routineLogs) {
@@ -6945,12 +7017,21 @@
                             });
                         });
                     } else if (item === 'class') {
+                        // ดึงค่าคาบเรียนที่เลือกล่าสุด
+                        const specificClassPeriodEl = document.getElementById('reportFilterSpecificClassPeriod');
+                        const specificClassPeriodFilter = specificClassPeriodEl ? specificClassPeriodEl.value : '';
+
                         const expectedClasses = teachingScheduleList.filter(c => c.day === dayName);
                         expectedClasses.forEach(cls => {
                             let isRecorded = false;
                             const period = cls.period;
                             const subj = `${cls.subjectCode} ${cls.subjectName}`.trim();
                             const room = cls.dept;
+
+                            // กรองตามคาบถ้ามีการเลือก
+                            if (specificClassPeriodFilter && String(period).trim() !== String(specificClassPeriodFilter).trim()) {
+                                return;
+                            }
 
                             if (allReportDataCache && allReportDataCache.classLogs) {
                                 for (let log of allReportDataCache.classLogs) {
@@ -6960,9 +7041,19 @@
                                     
                                     if (logDate === dateStr && String(logPeriod) === String(period) && String(logSubj).trim() === subj) {
                                         try {
-                                            let records = JSON.parse(log['ข้อมูลเช็คชื่อ'] || '[]');
-                                            if (records.some(r => r.room === room)) { isRecorded = true; break; }
-                                        } catch(e) {}
+                                            // แก้ไข: ตรวจสอบข้อมูลเช็คชื่อแบบใหม่ เพราะรายวิชาไม่ได้เก็บ room ไว้ใน records object
+                                            let jsonStr = log['ข้อมูลเช็คชื่อ'] || log['ข้อมูลการเช็คชื่อ'] || log['รายละเอียด'] || '[]';
+                                            let records = JSON.parse(jsonStr);
+                                            if (Array.isArray(records) && records.length > 0) { 
+                                                isRecorded = true; 
+                                                break; 
+                                            }
+                                        } catch(e) {
+                                            // สำรอง: หากเก็บแบบรายแถวเดี่ยว
+                                            if(log['สถานะ'] && (log['รหัสประจำตัว'] || log['รหัส'])) {
+                                                isRecorded = true; break;
+                                            }
+                                        }
                                     }
                                 }
                             }
