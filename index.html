@@ -2120,7 +2120,7 @@
             <div class="bg-gray-50 p-5 rounded-xl border border-gray-200 mb-6 grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                 
                 <!-- 1. เลือกช่วงวันที่ (แสดงก่อน) -->
-                <div class="md:col-span-2 opacity-50 pointer-events-none transition-opacity" id="reportDateFilterContainer">
+                <div class="md:col-span-2 opacity-50 pointer-events-none transition-opacity order-1" id="reportDateFilterContainer">
                     <label class="block text-sm font-bold text-gray-800 mb-1">2. เลือกช่วงวันที่</label>
                     <div class="flex flex-col sm:flex-row gap-2">
                         <select id="report_date_filter" onchange="handleReportDateFilterChange(); updateReportDependentDropdowns();" class="w-full sm:w-1/3 px-3 py-2 border rounded-lg focus:ring-1 focus:ring-red-500 font-semibold text-gray-700 bg-white">
@@ -2137,23 +2137,23 @@
                 </div>
 
                 <!-- 2. กรองชั้น/ห้อง -->
-                <div id="reportRoutineRoomFilterContainer" class="hidden">
-                    <label class="block text-sm font-bold text-gray-800 mb-1">3. เลือกระดับชั้น/ห้อง</label>
-                    <select id="reportRoutineRoomSelect" onchange="updateReportDependentDropdowns()" class="w-full px-3 py-2 border rounded-lg focus:ring-1 focus:ring-red-500 font-semibold text-green-700 bg-white">
+                <div id="reportRoutineRoomFilterContainer" class="hidden order-2">
+                    <label class="block text-sm font-bold text-gray-800 mb-1" id="reportRoomLabel">3. เลือกระดับชั้น/ห้อง</label>
+                    <select id="reportRoutineRoomSelect" onchange="handleReportRoomChange()" class="w-full px-3 py-2 border rounded-lg focus:ring-1 focus:ring-red-500 font-semibold text-green-700 bg-white">
                         <option value="">-- ทุกชั้น/ห้อง --</option>
                     </select>
                 </div>
 
                 <!-- 3. เลือกรายการที่ต้องการดู -->
-                <div id="reportItemFilterContainer" class="opacity-50 pointer-events-none">
+                <div id="reportItemFilterContainer" class="opacity-50 pointer-events-none order-3">
                     <label class="block text-sm font-bold text-gray-800 mb-1" id="reportItemLabel">4. เลือกรายการที่ต้องการดู</label>
                     <select id="reportFilterItem" onchange="handleReportItemChange()" class="w-full px-3 py-2 border rounded-lg focus:ring-1 focus:ring-red-500 font-semibold text-blue-700 bg-white">
-                        <option value="">-- กรุณาเลือกวันที่และห้องก่อน --</option>
+                        <option value="">-- กรุณาเลือกวันที่ก่อน --</option>
                     </select>
                 </div>
                 
                 <!-- ดรอปดาวน์สำหรับเลือกกิจวัตร ในรายงานตรวจสอบครูเวร -->
-                <div id="reportSpecificRoutineContainer" class="hidden md:col-span-2">
+                <div id="reportSpecificRoutineContainer" class="hidden md:col-span-2 order-4">
                     <label class="block text-sm font-bold text-gray-800 mb-1">เจาะจงเลือกกิจวัตร</label>
                     <select id="reportFilterSpecificRoutine" class="w-full px-3 py-2 border rounded-lg focus:ring-1 focus:ring-red-500 font-semibold text-purple-700 bg-white">
                         <option value="">-- ดึงรายชื่อกิจวัตรทั้งหมด --</option>
@@ -2161,7 +2161,7 @@
                 </div>
 
                 <!-- ดรอปดาวน์สำหรับเลือกคาบเรียน ในรายงานตรวจสอบครูสอน -->
-                <div id="reportSpecificClassPeriodContainer" class="hidden md:col-span-2">
+                <div id="reportSpecificClassPeriodContainer" class="hidden md:col-span-2 order-4">
                     <label class="block text-sm font-bold text-gray-800 mb-1">เจาะจงเลือกคาบเรียน</label>
                     <select id="reportFilterSpecificClassPeriod" class="w-full px-3 py-2 border rounded-lg focus:ring-1 focus:ring-red-500 font-semibold text-indigo-700 bg-white">
                         <option value="">-- ทุกคาบเรียน --</option>
@@ -2169,7 +2169,7 @@
                 </div>
 
                 <!-- ปุ่มค้นหา -->
-                <div class="flex items-end opacity-50 pointer-events-none transition-opacity md:col-span-4" id="reportSubmitContainer">
+                <div class="flex items-end opacity-50 pointer-events-none transition-opacity md:col-span-4 order-last" id="reportSubmitContainer">
                     <button onclick="generateDetailedReport()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow-lg transition active:scale-95 text-lg">
                         <i class="fas fa-search mr-2"></i> เรียกดูรายงาน
                     </button>
@@ -6877,23 +6877,37 @@
             const specificRoutineContainer = document.getElementById('reportSpecificRoutineContainer');
             const specificClassPeriodContainer = document.getElementById('reportSpecificClassPeriodContainer');
             const roomContainer = document.getElementById('reportRoutineRoomFilterContainer');
+            const roomLabel = document.getElementById('reportRoomLabel');
+            const itemLabel = document.getElementById('reportItemLabel');
 
             // Reset UI
             itemSelect.innerHTML = '<option value="">-- กรุณาเลือกลำดับก่อนหน้า --</option>';
             submitContainer.classList.add('opacity-50', 'pointer-events-none');
             specificRoutineContainer.classList.add('hidden');
             specificClassPeriodContainer.classList.add('hidden');
+            roomContainer.classList.remove('order-2', 'order-3');
+            itemContainer.classList.remove('order-2', 'order-3');
 
             if (type) {
                 dynamicFormContainer.classList.remove('hidden');
                 
                 if (type === 'class' || type === 'routine') {
-                    // โหมดรายงานปกติ ให้เลือกวันที่และห้องก่อน
                     dateContainer.classList.remove('opacity-50', 'pointer-events-none');
                     roomContainer.classList.remove('hidden');
                     itemContainer.classList.remove('opacity-50', 'pointer-events-none');
                     
-                    document.getElementById('reportItemLabel').innerText = type === 'class' ? '4. เลือกรายวิชาเรียน (จากตารางสอน)' : '4. เลือกกิจวัตร';
+                    if (type === 'routine') {
+                        // สลับลำดับให้เลือกกิจวัตร (Item) ก่อนเลือกห้อง 
+                        itemContainer.classList.add('order-2');
+                        roomContainer.classList.add('order-3');
+                        itemLabel.innerText = '3. เลือกกิจวัตร (ที่เช็คชื่อแล้ว)';
+                        roomLabel.innerText = '4. กรองระดับชั้น/ห้อง (ไม่บังคับ)';
+                    } else if (type === 'class') {
+                        roomContainer.classList.add('order-2');
+                        itemContainer.classList.add('order-3');
+                        roomLabel.innerText = '3. เลือกระดับชั้น/ห้อง';
+                        itemLabel.innerText = '4. เลือกรายวิชาเรียน (จากตารางสอน)';
+                    }
                     
                     // โหลดรายชื่อห้อง
                     const roomSelect = document.getElementById('reportRoutineRoomSelect');
@@ -6929,11 +6943,11 @@
                     }
                     
                 } else if (type === 'teacher_entry') {
-                    // โหมดตรวจสอบครู ให้เรียงแบบเก่าคือ เลือกประเภทการตรวจสอบก่อน
                     roomContainer.classList.add('hidden');
+                    itemContainer.classList.add('order-2');
                     dateContainer.classList.add('opacity-50', 'pointer-events-none');
                     itemContainer.classList.remove('opacity-50', 'pointer-events-none');
-                    document.getElementById('reportItemLabel').innerText = '2. เลือกประเภทการตรวจสอบ';
+                    itemLabel.innerText = '2. เลือกประเภทการตรวจสอบ';
                     loadReportOptions(); 
                 }
             } else {
@@ -6944,7 +6958,16 @@
             }
         }
 
-        // ฟังก์ชันใหม่: อัปเดต Dropdown รายการ(วิชา/กิจวัตร) ตาม วันที่และห้อง ที่เลือก
+        // เพิ่มฟังก์ชันใหม่เพื่อจัดการเมื่อมีการเปลี่ยนห้อง (แยกออกจากวันที่)
+        function handleReportRoomChange() {
+            const type = document.getElementById('reportFilterType').value;
+            if (type === 'class') {
+                updateReportDependentDropdowns();
+            }
+            // สำหรับ routine ไม่ต้องโหลดข้อมูลใหม่ เพราะเราดึงทุกกิจวัตรในวันนั้นมาแสดงอยู่แล้ว สามารถปล่อยผ่านให้ไปใช้ตัวกรองตอนกด "เรียกดูรายงาน" ได้เลย
+        }
+
+        // ฟังก์ชันอัปเดต Dropdown รายการ(วิชา/กิจวัตร) ตาม วันที่และห้อง ที่เลือก
         function updateReportDependentDropdowns() {
             const type = document.getElementById('reportFilterType').value;
             if (type !== 'class' && type !== 'routine') return;
@@ -6958,10 +6981,10 @@
                 updateDormStatsRange(dateRange, allReportDataCache.students, allReportDataCache.leaves);
             }
             
-            // ล็อคปุ่มค้นหาไว้ก่อนจนกว่าจะเลือกรายการ(วิชา/กิจวัตร)
-            document.getElementById('reportSubmitContainer').classList.add('opacity-50', 'pointer-events-none');
-
             if (type === 'class') {
+                // ล็อคปุ่มค้นหาไว้ก่อนจนกว่าจะเลือกรายการ(วิชา/กิจวัตร)
+                document.getElementById('reportSubmitContainer').classList.add('opacity-50', 'pointer-events-none');
+
                 if (!room) {
                     itemSelect.innerHTML = '<option value="">-- กรุณาเลือกระดับชั้น/ห้องก่อน --</option>';
                     return;
@@ -6973,7 +6996,6 @@
                     return;
                 }
 
-                // หาวันในสัปดาห์จากช่วงวันที่ที่เลือก
                 let d = new Date(dateRange.start);
                 let selectedDays = new Set();
                 const daysThai = ["อาทิตย์", "จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์"];
@@ -6982,7 +7004,6 @@
                     d.setDate(d.getDate() + 1);
                 }
 
-                // กรองตารางสอนตามห้องและวันที่เลือก
                 const availableClasses = teachingScheduleList.filter(item => {
                     return item.dept === room && selectedDays.has(item.day);
                 });
@@ -6990,7 +7011,6 @@
                 itemSelect.innerHTML = '<option value="">-- เลือกรายวิชาเรียน --</option>';
                 let addedItems = new Set();
                 
-                // จัดเรียงและนำรายวิชาที่ตรงเงื่อนไขใส่ใน Dropdown
                 availableClasses.sort((a,b) => parseInt(a.period) - parseInt(b.period)).forEach(cls => {
                     const subjStr = `คาบ ${cls.period} : ${cls.subjectCode} ${cls.subjectName}`;
                     if (!addedItems.has(subjStr)) {
@@ -7009,6 +7029,7 @@
                     return;
                 }
                 
+                const oldRoutineVal = itemSelect.value;
                 let itemsSet = new Set();
                 let logsToSearch = allReportDataCache.routineLogs || [];
                 
@@ -7017,21 +7038,31 @@
                     let rDateObj = getStandardDateObj(row[dateKey]);
                     
                     if (rDateObj >= dateRange.start && rDateObj <= dateRange.end) {
-                         let recRoom = row['ชั้น/ห้อง'] || row.room || '';
-                         if (room === '' || recRoom === room || recRoom.includes(room)) {
-                             let itemName = row['กิจวัตร'] || row['รายการกิจวัตร'] || row['รายการ'] || Object.values(row)[1];
-                             if(itemName && String(itemName).trim() !== '') itemsSet.add(String(itemName).trim());
-                         }
+                         // สำหรับโหมด Routine นำเงื่อนไขเช็คห้องออกไป ให้แสดงกิจวัตรทั้งหมดที่มีการบันทึกในวันนั้นขึ้นมาให้เลือกก่อน (เพื่อแก้ปัญหาหาข้อมูลไม่เจอ)
+                         let itemName = row['กิจวัตร'] || row['รายการกิจวัตร'] || row['รายการ'] || Object.values(row)[1];
+                         if(itemName && String(itemName).trim() !== '') itemsSet.add(String(itemName).trim());
                     }
                 });
 
                 itemSelect.innerHTML = '<option value="">-- เลือกกิจวัตร --</option>';
                 if(itemsSet.size === 0) {
-                    itemSelect.innerHTML = '<option value="">(ไม่พบข้อมูลการเช็คชื่อตามเงื่อนไข)</option>';
+                    itemSelect.innerHTML = '<option value="">(ไม่พบข้อมูลการเช็คชื่อตามช่วงเวลาที่เลือก)</option>';
                 } else {
                     itemsSet.forEach(item => {
                         itemSelect.innerHTML += `<option value="${item}">${item}</option>`;
                     });
+                    
+                    // เลื่อนกลับไปเลือกค่าเดิม (ถ้ามี) เพื่อไม่ให้ผู้ใช้ต้องเลือกใหม่
+                    if(oldRoutineVal && itemsSet.has(oldRoutineVal)) {
+                        itemSelect.value = oldRoutineVal;
+                    }
+                }
+                
+                // ตรวจสอบสถานะปุ่มค้นหาของ routine
+                if(itemSelect.value) {
+                    document.getElementById('reportSubmitContainer').classList.remove('opacity-50', 'pointer-events-none');
+                } else {
+                    document.getElementById('reportSubmitContainer').classList.add('opacity-50', 'pointer-events-none');
                 }
             }
         }
@@ -7538,24 +7569,50 @@
                 let rDateObj = new Date(parseInt(p[2])-543, parseInt(p[1])-1, parseInt(p[0]));
                 rDateObj.setHours(12,0,0,0);
 
-                if(rDateObj >= dateRange.start && rDateObj <= dateRange.end && String(rowItemName).trim() === String(item).trim()) {
+                // ปรับการเปรียบเทียบชื่อวิชา/กิจวัตรให้ยืดหยุ่นขึ้น ป้องกันปัญหาเว้นวรรคไม่ตรงกัน
+                let normRowItem = String(rowItemName).replace(/\s+/g, '').toLowerCase();
+                let normItem = String(item).replace(/\s+/g, '').toLowerCase();
+
+                if(rDateObj >= dateRange.start && rDateObj <= dateRange.end && normRowItem === normItem) {
                     let jsonStr = row['ข้อมูลการเช็คชื่อ'] || row['ข้อมูลเช็คชื่อ'] || row['รายละเอียด'];
+                    let rowOuterRoom = String(row['ชั้น/ห้อง'] || row.room || '').trim(); 
                     
+                    // ฟังก์ชันผู้ช่วยสำหรับแนบชื่อห้องให้ตรงกับตัวนักเรียนแบบเรียลไทม์
+                    let processRecordRoom = (rec) => {
+                        // บังคับดึงห้องจากฐานข้อมูลนักเรียนหลักโดยตรงเสมอ เพื่อให้ชื่อห้องเป๊ะ 100% (เช่น ม.1/4)
+                        let st = masterStudentData.find(s => String(s.studentId) === String(rec.studentId || rec['รหัสประจำตัว'] || rec['รหัส']));
+                        if (st) {
+                            rec.room = (st.room && st.room !== '-') ? `${st.level}/${st.room}` : st.level;
+                        } else if (!rec.room || rec.room === '-' || rec.room === '') {
+                            rec.room = rowOuterRoom;
+                        }
+                        
+                        // แปลง _ กลับเป็น / กรณีชื่อชีตถูก Google Sheet แปลงไปแล้ว
+                        if (rec.room && typeof rec.room === 'string') {
+                            rec.room = rec.room.replace(/_/g, '/');
+                        }
+                        return rec;
+                    };
+
                     // ถ้ารูปแบบเป็น JSON Array (ระบบใหม่)
                     if (jsonStr) {
                         try {
                             let parsed = JSON.parse(jsonStr);
-                            if(Array.isArray(parsed)) compiledRecords = compiledRecords.concat(parsed);
+                            if(Array.isArray(parsed)) {
+                                parsed = parsed.map(processRecordRoom);
+                                compiledRecords = compiledRecords.concat(parsed);
+                            }
                         } catch(e) {}
                     } 
                     // ถ้ารูปแบบเป็นแถวรายบุคคล (Flat Rows)
                     else if (row['สถานะ'] && (row['รหัสประจำตัว'] || row['รหัส'])) {
-                        compiledRecords.push({
+                        let singleRec = {
                             studentId: row['รหัสประจำตัว'] || row['รหัส'] || '-',
                             fullName: row['ชื่อ-สกุล'] || '-',
-                            room: row['ชั้น/ห้อง'] || row.room || '-',
+                            room: row['ชั้น/ห้อง'] || row.room || '',
                             status: row['สถานะ'] || '-'
-                        });
+                        };
+                        compiledRecords.push(processRecordRoom(singleRec));
                     } 
                     // สำรอง
                     else {
@@ -7563,7 +7620,10 @@
                         let lastCol = values[values.length - 1];
                         try {
                             let parsed = JSON.parse(lastCol);
-                            if(Array.isArray(parsed)) compiledRecords = compiledRecords.concat(parsed);
+                            if(Array.isArray(parsed)) {
+                                parsed = parsed.map(processRecordRoom);
+                                compiledRecords = compiledRecords.concat(parsed);
+                            }
                         } catch(e) {}
                     }
                 }
@@ -7571,7 +7631,7 @@
 
             // --- แก้ไข: นำข้อมูลมากรองตามห้องที่เลือกที่ตั้งค่าไว้ใหม่ ---
             if (type === 'routine' || type === 'class') {
-                const roomFilterEl = document.getElementById('reportRoomSelect');
+                const roomFilterEl = document.getElementById('reportRoutineRoomSelect');
                 const roomFilter = roomFilterEl ? roomFilterEl.value : '';
                 if (roomFilter !== '') {
                     compiledRecords = compiledRecords.filter(rec => {
