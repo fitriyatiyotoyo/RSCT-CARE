@@ -2646,22 +2646,29 @@
             }, 3000);
         }
 
-        // Digital Clock
+        // Digital Clock และการตั้งค่าวันที่เริ่มต้น
         setInterval(() => {
             const now = new Date();
             document.getElementById('currentTime').innerHTML = `<i class="far fa-clock text-rsct-red mr-1"></i> ${now.toLocaleTimeString('th-TH')}`;
+            
+            // ฟังก์ชันช่วยแปลงวันที่สำหรับตั้งค่าเริ่มต้น ป้องกันปัญหา Timezone (ที่ทำให้แสดงผลเป็นวันเมื่อวานในช่วงเช้า)
+            const getLocalDateStr = (d) => {
+                return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+            };
+            const localTodayStr = getLocalDateStr(now);
+
             if(document.getElementById('routineDate') && !document.getElementById('routineDate').value) {
-                document.getElementById('routineDate').valueAsDate = new Date();
+                document.getElementById('routineDate').value = localTodayStr;
                 if(typeof handleRoutineDateChange === 'function') handleRoutineDateChange();
             }
             if(document.getElementById('classDate') && !document.getElementById('classDate').value) {
-                document.getElementById('classDate').valueAsDate = new Date();
+                document.getElementById('classDate').value = localTodayStr;
                 if(typeof populateClassCheckSchedules === 'function') populateClassCheckSchedules();
             }
             if(document.getElementById('leaveDate') && !document.getElementById('leaveDate').value) {
-                document.getElementById('leaveDate').valueAsDate = new Date();
+                document.getElementById('leaveDate').value = localTodayStr;
                 if(document.getElementById('leaveStartDate') && !document.getElementById('leaveStartDate').value) {
-                    document.getElementById('leaveStartDate').valueAsDate = new Date();
+                    document.getElementById('leaveStartDate').value = localTodayStr;
                     calcLeaveEndDate();
                 }
             }
@@ -2719,8 +2726,30 @@
                 return;
             }
 
-            mySchedules.sort((a,b) => parseInt(a.period) - parseInt(b.period)).forEach(item => {
-                const text = `คาบ ${item.period} : ${item.subjectCode} ${item.subjectName} (${item.dept}) - กลุ่มผู้เรียน: ${item.learnerType}`;
+            mySchedules.sort((a,b) => {
+                // แก้ไขปัญหาการเรียงลำดับเมื่อคาบเป็นสตริงติดกัน (เช่น '1-2' หรือมีอัญประกาศติดมา) ให้ดึงเฉพาะเลขคาบแรกมาเทียบ
+                let pa = parseInt(String(a.period).replace(/[^0-9]/g, '')) || 0;
+                let pb = parseInt(String(b.period).replace(/[^0-9]/g, '')) || 0;
+                return pa - pb;
+            }).forEach(item => {
+                // ลบเครื่องหมาย ' ออกก่อนแสดงผล ป้องกันบั๊กข้อความแสดงผลแปลกๆ
+                let cleanPeriod = String(item.period).replace(/^'/, '');
+                
+                // เพิ่มเวลาเริ่ม-จบ ให้ครอบคลุมระยะเวลาคาบที่สอน
+                let timeStr = "";
+                if (systemPeriodsList && systemPeriodsList.length > 0) {
+                    if (cleanPeriod.includes('-')) {
+                        const parts = cleanPeriod.split('-');
+                        const startObj = systemPeriodsList.find(p => String(p.period) === parts[0].trim());
+                        const endObj = systemPeriodsList.find(p => String(p.period) === parts[1].trim());
+                        if (startObj && endObj) timeStr = ` [${startObj.start} - ${endObj.end}]`;
+                    } else {
+                        const pObj = systemPeriodsList.find(p => String(p.period) === cleanPeriod.trim());
+                        if (pObj) timeStr = ` [${pObj.start} - ${pObj.end}]`;
+                    }
+                }
+
+                const text = `คาบ ${cleanPeriod}${timeStr} : ${item.subjectCode} ${item.subjectName} (${item.dept})`;
                 select.innerHTML += `<option value="${item.originalIndex}">${text}</option>`;
             });
         }
@@ -2743,7 +2772,8 @@
 
             // แสดงข้อมูลในฟอร์มแก้ไข
             infoDiv.classList.remove('hidden');
-            document.getElementById('info_c_period_display').innerText = `คาบที่ ${item.period}`;
+            let cleanPeriod = String(item.period).replace(/^'/, '');
+            document.getElementById('info_c_period_display').innerText = `คาบที่ ${cleanPeriod}`;
             document.getElementById('edit_c_index').value = indexStr;
             document.getElementById('edit_c_subj_code').value = item.subjectCode || '';
             document.getElementById('edit_c_subj_name').value = item.subjectName || '';
@@ -2754,7 +2784,7 @@
             document.getElementById('edit_c_teacher').value = item.teacher || '';
             document.getElementById('edit_c_day').value = item.day || '';
 
-            // Set hidden inputs for submission
+            // Set hidden inputs for submission (เก็บรูปแบบออริจินอลไว้เพื่อให้บันทึกเข้าฐานข้อมูลได้ตรงกัน)
             document.getElementById('hidden_c_period').value = item.period;
             document.getElementById('hidden_c_subject').value = `${item.subjectCode} ${item.subjectName}`;
             document.getElementById('hidden_c_room').value = item.dept;
