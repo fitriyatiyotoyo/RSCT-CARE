@@ -334,7 +334,7 @@
     <div id="mainDashboard" class="flex w-full h-full hidden">
         
         <!-- Sidebar (PC) / Offcanvas (Mobile) -->
-        <aside id="sidebar" class="bg-rsct-dark text-white w-72 flex-shrink-0 flex flex-col absolute inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 z-30 shadow-xl border-r border-gray-800">
+        <aside id="sidebar" class="bg-rsct-dark text-white w-72 flex-shrink-0 flex flex-col absolute inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-all duration-300 z-[100] shadow-xl border-r border-gray-800">
             <div class="p-4 flex items-center justify-between border-b border-gray-700">
                 <div class="flex items-center gap-3">
                     <img id="sidebarLogo" src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/React-icon.svg/1200px-React-icon.svg.png" class="w-10 h-10 object-contain drop-shadow-md">
@@ -343,8 +343,9 @@
                         <p class="text-[10px] text-gray-400">ระบบติดตามนักเรียน</p>
                     </div>
                 </div>
-                <button class="md:hidden text-gray-400 hover:text-white" onclick="toggleSidebar()">
-                    <i class="fas fa-times text-xl"></i>
+                <!-- นำ md:hidden ออก เพื่อให้แสดงบนมือถือ แท็บเล็ต และคอมพิวเตอร์ -->
+                <button class="text-gray-400 hover:text-white transition-transform active:scale-95" onclick="toggleSidebar()" title="ซ่อนเมนู">
+                    <i class="fas fa-times text-2xl"></i>
                 </button>
             </div>
 
@@ -386,7 +387,8 @@
             <!-- Top Header -->
             <header class="bg-white shadow-sm h-16 flex items-center justify-between px-4 z-20">
                 <div class="flex items-center gap-3">
-                    <button class="md:hidden text-rsct-dark hover:text-rsct-red text-xl" onclick="toggleSidebar()">
+                    <!-- นำ md:hidden ออก เพื่อให้แสดงปุ่ม Hamburger บนทุกขนาดหน้าจอ -->
+                    <button class="text-rsct-dark hover:text-rsct-red text-2xl transition-transform active:scale-95" onclick="toggleSidebar()" title="แสดงเมนู">
                         <i class="fas fa-bars"></i>
                     </button>
                     <h2 class="text-xl font-bold text-rsct-dark" id="pageTitle">หน้าหลัก</h2>
@@ -433,27 +435,41 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                        <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-blue-500 flex items-center justify-between transition-transform hover:-translate-y-1">
-                            <div>
-                                <h3 class="text-gray-500 text-sm font-bold">นักเรียนทั้งหมดในระบบ</h3>
-                                <p class="text-3xl font-black mt-1 text-blue-600"><span id="dash_total_student_val">0</span> <span class="text-sm font-normal text-gray-400">คน</span></p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                        <!-- กล่อง 1: มาเรียน (หน้าเสาธง) -->
+                        <div class="bg-white rounded-xl shadow-sm p-5 border-l-4 border-green-500 flex flex-col justify-between transition-transform hover:-translate-y-1 hover:shadow-md">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="text-gray-600 text-xs font-bold leading-tight" id="lbl_dash_flag_present">มาเรียน (หน้าเสาธง)</h3>
+                                <div class="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center text-green-500 text-lg shadow-inner shrink-0"><i class="fas fa-user-check"></i></div>
                             </div>
-                            <div class="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center text-blue-500 text-2xl shadow-inner"><i class="fas fa-users"></i></div>
+                            <p class="text-3xl font-black text-green-600"><span id="dash_flag_present_val">0</span> <span class="text-sm font-normal text-gray-400">คน</span></p>
                         </div>
-                        <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-green-500 flex items-center justify-between transition-transform hover:-translate-y-1">
-                            <div>
-                                <h3 class="text-gray-500 text-sm font-bold" id="lbl_dash_present">อยู่หอพักวันนี้ (คงเหลือ)</h3>
-                                <p class="text-3xl font-black mt-1 text-green-600"><span id="dash_present_student_val">0</span> <span class="text-sm font-normal text-gray-400">คน</span></p>
+                        
+                        <!-- กล่อง 2: แจ้งลา -->
+                        <div class="bg-white rounded-xl shadow-sm p-5 border-l-4 border-orange-500 flex flex-col justify-between transition-transform hover:-translate-y-1 hover:shadow-md">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="text-gray-600 text-xs font-bold leading-tight" id="lbl_dash_leave">นักเรียนที่แจ้งลา</h3>
+                                <div class="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center text-orange-500 text-lg shadow-inner shrink-0"><i class="fas fa-user-minus"></i></div>
                             </div>
-                            <div class="w-14 h-14 rounded-full bg-green-50 flex items-center justify-center text-green-500 text-2xl shadow-inner"><i class="fas fa-home"></i></div>
+                            <p class="text-3xl font-black text-orange-600"><span id="dash_leave_val">0</span> <span class="text-sm font-normal text-gray-400">คน</span></p>
                         </div>
-                        <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-red-500 flex items-center justify-between transition-transform hover:-translate-y-1">
-                            <div>
-                                <h3 class="text-gray-500 text-sm font-bold" id="lbl_dash_leave">แจ้งลาในวันนี้</h3>
-                                <p class="text-3xl font-black mt-1 text-red-600"><span id="dash_leave_student_val">0</span> <span class="text-sm font-normal text-gray-400">คน</span></p>
+
+                        <!-- กล่อง 3: หนีเรียน -->
+                        <div class="bg-white rounded-xl shadow-sm p-5 border-l-4 border-purple-500 flex flex-col justify-between transition-transform hover:-translate-y-1 hover:shadow-md">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="text-gray-600 text-xs font-bold leading-tight" id="lbl_dash_skip">หนีเรียน (รายวิชา)</h3>
+                                <div class="w-10 h-10 rounded-full bg-purple-50 flex items-center justify-center text-purple-500 text-lg shadow-inner shrink-0"><i class="fas fa-user-ninja"></i></div>
                             </div>
-                            <div class="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center text-red-500 text-2xl shadow-inner"><i class="fas fa-user-minus"></i></div>
+                            <p class="text-3xl font-black text-purple-600"><span id="dash_skip_val">0</span> <span class="text-sm font-normal text-gray-400">คน</span></p>
+                        </div>
+
+                        <!-- กล่อง 4: อยู่หอพัก -->
+                        <div class="bg-white rounded-xl shadow-sm p-5 border-l-4 border-blue-500 flex flex-col justify-between transition-transform hover:-translate-y-1 hover:shadow-md">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="text-gray-600 text-xs font-bold leading-tight" id="lbl_dash_dorm_present">อยู่หอพัก (คงเหลือ)</h3>
+                                <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-500 text-lg shadow-inner shrink-0"><i class="fas fa-bed"></i></div>
+                            </div>
+                            <p class="text-3xl font-black text-blue-600"><span id="dash_dorm_present_val">0</span> <span class="text-sm font-normal text-gray-400">คน</span></p>
                         </div>
                     </div>
 
@@ -1161,16 +1177,20 @@
                 </div>
             </div>
 
-            <div class="overflow-x-auto border rounded-lg mb-4">
+            <div class="overflow-x-auto border rounded-lg mb-4 relative">
                                 <table class="w-full text-sm text-left whitespace-nowrap">
                                     <thead class="bg-rsct-dark text-white">
                                         <tr>
-                                            <th class="p-3 w-16 text-center">ลำดับ</th><th class="p-3 w-24">รหัส</th><th class="p-3">ชื่อ-สกุล</th><th class="p-3 w-24">ชั้น/ห้อง</th><th class="p-3 w-24">กีฬา</th>
-                                            <th class="p-3 text-center min-w-[250px]">สถานะ</th>
+                                            <th class="p-3 w-16 text-center sticky left-0 bg-rsct-dark z-20 border-r border-gray-600">ลำดับ</th>
+                                            <th class="p-3 w-24 sticky left-[64px] bg-rsct-dark z-20 border-r border-gray-600">รหัส</th>
+                                            <th class="p-3 sticky left-[160px] bg-rsct-dark z-20 border-r border-gray-600 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)]">ชื่อ-สกุล</th>
+                                            <th class="p-3 w-24">ชั้น/ห้อง</th>
+                                            <th class="p-3 w-24">กีฬา</th>
+                                            <th class="p-3 text-center min-w-[300px]">สถานะ</th>
                                         </tr>
                                     </thead>
                                     <tbody id="routineCheckTableBody">
-                                        <tr><td colspan="6" class="p-8 text-center text-gray-400"><i class="fas fa-info-circle text-2xl mb-2 block"></i> กรุณาเลือกกิจวัตรและวันที่ จากนั้นกดปุ่มเพื่อดึงข้อมูล</td></tr>
+                                        <tr><td colspan="6" class="p-8 text-center text-gray-400 sticky left-0"><i class="fas fa-info-circle text-2xl mb-2 block"></i> กรุณาเลือกกิจวัตรและวันที่ จากนั้นกดปุ่มเพื่อดึงข้อมูล</td></tr>
                                     </tbody>
                                 </table>
                             </div>
@@ -1256,19 +1276,19 @@
                             </div>
 
                             <!-- พื้นที่จำลองรายชื่อนักเรียน -->
-                            <div class="overflow-x-auto mb-4 border rounded">
+                            <div class="overflow-x-auto mb-4 border rounded relative">
                                 <table class="w-full text-sm text-left whitespace-nowrap">
                                     <thead class="bg-rsct-dark text-white">
                                         <tr>
-                                            <th class="p-3 w-16 text-center">ลำดับ</th>
-                                            <th class="p-3 w-20">รหัส</th>
-                                            <th class="p-3">ชื่อ-สกุล</th>
+                                            <th class="p-3 w-16 text-center sticky left-0 bg-rsct-dark z-20 border-r border-gray-600">ลำดับ</th>
+                                            <th class="p-3 w-20 sticky left-[64px] bg-rsct-dark z-20 border-r border-gray-600">รหัส</th>
+                                            <th class="p-3 sticky left-[144px] bg-rsct-dark z-20 border-r border-gray-600 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)]">ชื่อ-สกุล</th>
                                             <th class="p-3 w-24">ชั้น/ห้อง</th>
-                                            <th class="p-3 text-center min-w-[300px]">สถานะการเข้าเรียน</th>
+                                            <th class="p-3 text-center min-w-[400px]">สถานะการเข้าเรียน</th>
                                         </tr>
                                     </thead>
                                     <tbody id="classCheckTableBody">
-                                        <tr><td colspan="5" class="p-8 text-center text-gray-400"><i class="fas fa-info-circle text-2xl mb-2 block"></i> กรุณาเลือกวันที่ และรายวิชา จากนั้นกดดึงรายชื่อ</td></tr>
+                                        <tr><td colspan="5" class="p-8 text-center text-gray-400 sticky left-0"><i class="fas fa-info-circle text-2xl mb-2 block"></i> กรุณาเลือกวันที่ และรายวิชา จากนั้นกดดึงรายชื่อ</td></tr>
                                     </tbody>
                                 </table>
                             </div>
@@ -1568,14 +1588,21 @@
                         <h3 class="font-bold text-lg mb-4"><i class="fas fa-envelope-open-text text-rsct-red"></i> แบบฟอร์มแจ้งลา</h3>
                         <form id="leaveForm" onsubmit="submitLeaveForm(event)">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 p-4 rounded-lg border">
-                                <div><label class="block text-sm font-bold text-rsct-dark mb-1">วันที่กรอกแบบฟอร์ม</label><input type="date" name="l_date" id="leaveDate" class="w-full border rounded p-2 focus:ring-1 focus:ring-rsct-red" required></div>
-                                <div>
-                                    <label class="block text-sm font-bold text-rsct-dark mb-1">ประเภทการลา</label>
-                                    <select name="l_type" class="w-full border rounded p-2 focus:ring-1 focus:ring-rsct-red">
-                                        <option>ลาป่วย</option><option>ลากิจ</option><option>ลากลับบ้าน</option><option>แข่งขันกีฬา</option>
-                                    </select>
-                                </div>
                                 
+                                <!-- ข้อมูลระบบ (สร้างอัตโนมัติ/อ่านอย่างเดียว) -->
+                                <div>
+                                    <label class="block text-sm font-bold text-gray-500 mb-1">วันที่กรอกแบบฟอร์ม</label>
+                                    <input type="date" name="l_date" id="leaveDate" class="w-full border rounded p-2 bg-gray-200 text-gray-600 outline-none cursor-not-allowed" readonly required>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-bold text-gray-500 mb-1">ชื่อผู้บันทึกรายการ</label>
+                                    <div class="relative">
+                                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400"><i class="fas fa-user-edit"></i></span>
+                                        <input type="text" name="l_recorder" id="leaveRecorder" class="w-full pl-10 pr-3 py-2 border rounded bg-gray-200 text-gray-600 outline-none cursor-not-allowed font-bold" readonly title="ระบบดึงข้อมูลอัตโนมัติจากผู้เข้าสู่ระบบ">
+                                    </div>
+                                </div>
+
+                                <!-- เลือกลำดับ 1: เลือกนักเรียน -->
                                 <div class="md:col-span-2 border-t border-b py-4 my-2 border-gray-200">
                                     <label class="block text-sm font-bold text-rsct-red mb-2"><i class="fas fa-users mr-1"></i> เลือกนักเรียนที่ต้องการลา (ค้นหาและเลือกได้หลายคน)</label>
                                     
@@ -1610,30 +1637,19 @@
                                     <input type="hidden" name="l_student" id="leave_selected_students" required>
                                 </div>
 
-                                <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4 border-t pt-4 border-gray-200">
-                                    <div><label class="block text-sm font-bold text-rsct-dark mb-1">ตั้งแต่วันที่ลา</label><input type="date" name="l_start_date" id="leaveStartDate" class="w-full border rounded p-2 focus:ring-1 focus:ring-rsct-red" required onchange="calcLeaveEndDate()"></div>
-                                    <div><label class="block text-sm font-bold text-rsct-dark mb-1">ถึงวันที่</label><input type="date" name="l_end_date" id="leaveEndDate" class="w-full border rounded p-2 focus:ring-1 focus:ring-rsct-red" required onchange="calcLeaveDaysCount()"></div>
-                                    <div><label class="block text-sm font-bold text-rsct-dark mb-1">จำนวนวันลา (วัน)</label><input type="number" name="l_days" id="leaveDaysCount" class="w-full border rounded p-2 focus:ring-1 focus:ring-rsct-red" min="1" max="365" value="1" required oninput="calcLeaveEndDate()"></div>
+                                <!-- เลือกลำดับ 2: ประเภทการลา -->
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-bold text-rsct-dark mb-1">ประเภทการลา</label>
+                                    <select name="l_type" class="w-full md:w-1/2 border rounded p-2 focus:ring-1 focus:ring-rsct-red font-bold text-blue-700 bg-white shadow-sm">
+                                        <option>ลาป่วย</option><option>ลากิจ</option><option>ลากลับบ้าน</option><option>แข่งขันกีฬา</option>
+                                    </select>
                                 </div>
-                                <div class="md:col-span-2"><label class="block text-sm font-bold text-rsct-dark mb-1">สาเหตุการลา</label><textarea name="l_reason" class="w-full border rounded p-2 focus:ring-1 focus:ring-rsct-red" rows="2" placeholder="ระบุเหตุผล..." required></textarea></div>
-                                
-                                <!-- ข้อมูลเพิ่มเติม: ผู้บันทึก, เบอร์ติดต่อผู้ปกครอง, ที่อยู่ -->
-                                <div class="md:col-span-2 border-t pt-4 border-gray-200 grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="block text-sm font-bold text-rsct-dark mb-1">ชื่อผู้บันทึกรายการ</label>
-                                        <div class="relative">
-                                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500"><i class="fas fa-user-edit"></i></span>
-                                            <input type="text" name="l_recorder" id="leaveRecorder" class="w-full pl-10 pr-3 py-2 border rounded bg-gray-200 text-gray-700 font-bold focus:outline-none" readonly title="ระบบดึงข้อมูลอัตโนมัติจากผู้เข้าสู่ระบบ">
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-bold text-rsct-dark mb-1">เบอร์ติดต่อผู้ปกครอง</label>
-                                        <input type="tel" name="l_parent_phone" class="w-full border rounded p-2 focus:ring-1 focus:ring-rsct-red" placeholder="เช่น 0812345678" required>
-                                    </div>
-                                    <div class="md:col-span-2">
-                                        <label class="block text-sm font-bold text-rsct-dark mb-1">ที่อยู่ที่สามารถติดต่อได้ช่วงลา</label>
-                                        <textarea name="l_contact_address" class="w-full border rounded p-2 focus:ring-1 focus:ring-rsct-red" rows="2" placeholder="บ้านเลขที่ หมู่ที่ ตำบล อำเภอ จังหวัด..." required></textarea>
-                                    </div>
+
+                                <!-- เลือกลำดับ 3: วันที่ลา -->
+                                <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4 border-t pt-4 border-gray-200">
+                                    <div><label class="block text-sm font-bold text-rsct-dark mb-1">ตั้งแต่วันที่ลา</label><input type="date" name="l_start_date" id="leaveStartDate" class="w-full border rounded p-2 focus:ring-1 focus:ring-rsct-red shadow-sm" required onchange="calcLeaveEndDate()"></div>
+                                    <div><label class="block text-sm font-bold text-rsct-dark mb-1">ถึงวันที่</label><input type="date" name="l_end_date" id="leaveEndDate" class="w-full border rounded p-2 focus:ring-1 focus:ring-rsct-red shadow-sm" required onchange="calcLeaveDaysCount()"></div>
+                                    <div><label class="block text-sm font-bold text-rsct-dark mb-1">จำนวนวันลา (วัน)</label><input type="number" name="l_days" id="leaveDaysCount" class="w-full border rounded p-2 focus:ring-1 focus:ring-rsct-red font-bold shadow-sm" min="1" max="365" value="1" required oninput="calcLeaveEndDate()"></div>
                                 </div>
                             </div>
 
@@ -1667,21 +1683,20 @@
                             
                             <div class="overflow-x-auto border rounded-lg shadow-sm">
                                 <table class="w-full text-sm text-left whitespace-nowrap" id="leaveHistoryTable">
-                                    <thead>
+                                    <thead class="bg-gray-100 text-gray-700">
                                         <tr>
-                                            <th class="p-3 border-r w-32">วันที่กรอกลา</th>
-                                            <th class="p-3 border-r w-40 text-center">ช่วงวันที่ลา</th>
-                                            <th class="p-3 border-r">รหัส/ชื่อนักเรียน</th>
-                                            <th class="p-3 border-r w-24 text-center">ประเภทลา</th>
-                                            <th class="p-3 border-r text-center w-20">จำนวนวัน</th>
-                                            <th class="p-3 border-r">สาเหตุ</th>
-                                            <th class="p-3 border-r text-center w-24">ผู้บันทึก</th>
-                                            <th class="p-3 border-r text-center w-24">สถานะการอนุมัติ</th>
-                                            <th class="p-3 text-center w-24" id="th_leave_action">จัดการ</th>
+                                            <th class="p-3 border-r w-32 border-b">วันที่กรอกลา</th>
+                                            <th class="p-3 border-r w-40 text-center border-b">ช่วงวันที่ลา</th>
+                                            <th class="p-3 border-r border-b">รหัส/ชื่อนักเรียน</th>
+                                            <th class="p-3 border-r w-24 text-center border-b">ประเภทลา</th>
+                                            <th class="p-3 border-r text-center w-20 border-b">จำนวนวัน</th>
+                                            <th class="p-3 border-r text-center w-24 border-b">ผู้บันทึก</th>
+                                            <th class="p-3 border-r text-center w-24 border-b">สถานะการอนุมัติ</th>
+                                            <th class="p-3 text-center w-24 border-b" id="th_leave_action">จัดการ</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <tr><td colspan="9" class="p-8 text-center text-gray-500">กรุณารอสักครู่...</td></tr>
+                                        <tr><td colspan="8" class="p-8 text-center text-gray-500">กรุณารอสักครู่...</td></tr>
                                     </tbody>
                                 </table>
                             </div>
@@ -2689,10 +2704,17 @@
             }
         }
 
-        // Toggle Sidebar Mobile
+        // Toggle Sidebar (รองรับทั้ง Mobile, Tablet และ Desktop)
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
-            sidebar.classList.toggle('-translate-x-full');
+            if (window.innerWidth < 768) {
+                // หน้าจอมือถือ: เลื่อนซ่อน/แสดง โดยการทับเนื้อหา
+                sidebar.classList.toggle('-translate-x-full');
+            } else {
+                // หน้าจอ Desktop/Tablet: เลื่อนซ่อนและหดพื้นที่ให้เนื้อหาหลักขยายเต็มจอ
+                sidebar.classList.toggle('md:translate-x-0');
+                sidebar.classList.toggle('md:-ml-72');
+            }
         }
 
         // ================= สคริปต์หน้าเช็คชื่อเข้าเรียน (รายวิชา) =================
@@ -2878,10 +2900,6 @@
                         return String(a.studentId).localeCompare(String(b.studentId));
                     });
 
-                    const isLockedLeave = (currentUserRole !== 'ผู้ดูแลระบบ');
-                    const leaveLockClass = isLockedLeave ? 'pointer-events-none opacity-50' : 'cursor-pointer hover:font-bold';
-                    const leaveTitle = isLockedLeave ? 'title="อัปเดตอัตโนมัติจากระบบแจ้งลา (ติดต่อแอดมินเพื่อแก้ไข)"' : '';
-
                     sortedStudents.forEach((st, idx) => {
                         const displayRoom = (st.room && st.room !== '-') ? `${st.level}/${st.room}` : st.level;
                         const leaveType = getStudentLeaveType(st.studentId, classDate);
@@ -2893,21 +2911,22 @@
                         const chkSport = (leaveType === 'แข่งขันกีฬา' || leaveType === 'ลาแข่งขัน') ? 'checked' : '';
 
                         const statusRadios = `
-                            <label class="text-green-600 cursor-pointer hover:font-bold"><input type="radio" name="catt_${st.studentId}" value="มา" class="accent-green-600 mr-1" ${chkHere}> มา</label>
-                            <label class="text-red-500 cursor-pointer hover:font-bold"><input type="radio" name="catt_${st.studentId}" value="ขาด" class="accent-red-500 mr-1"> ขาด</label>
-                            <label class="text-yellow-600 cursor-pointer hover:font-bold"><input type="radio" name="catt_${st.studentId}" value="สาย" class="accent-yellow-600 mr-1"> สาย</label>
-                            <label class="text-yellow-500 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="catt_${st.studentId}" value="ลาป่วย" class="accent-yellow-500 mr-1" ${chkSick}> ลาป่วย</label>
-                            <label class="text-yellow-600 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="catt_${st.studentId}" value="ลากิจ" class="accent-yellow-600 mr-1" ${chkPersonal}> ลากิจ</label>
-                            <label class="text-blue-500 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="catt_${st.studentId}" value="ลาแข่งขัน" class="accent-blue-500 mr-1" ${chkSport}> ลาแข่งขัน</label>
+                            <label class="text-green-600 cursor-pointer hover:font-bold whitespace-nowrap"><input type="radio" name="catt_${st.studentId}" value="มา" class="accent-green-600 mr-1" ${chkHere}> มา</label>
+                            <label class="text-red-500 cursor-pointer hover:font-bold whitespace-nowrap"><input type="radio" name="catt_${st.studentId}" value="ขาด" class="accent-red-500 mr-1"> ขาด</label>
+                            <label class="text-yellow-600 cursor-pointer hover:font-bold whitespace-nowrap"><input type="radio" name="catt_${st.studentId}" value="สาย" class="accent-yellow-600 mr-1"> สาย</label>
+                            <label class="text-purple-600 cursor-pointer hover:font-bold whitespace-nowrap"><input type="radio" name="catt_${st.studentId}" value="หนีเรียน" class="accent-purple-600 mr-1"> หนีเรียน</label>
+                            <label class="text-yellow-500 cursor-pointer hover:font-bold whitespace-nowrap"><input type="radio" name="catt_${st.studentId}" value="ลาป่วย" class="accent-yellow-500 mr-1" ${chkSick}> ลาป่วย</label>
+                            <label class="text-yellow-600 cursor-pointer hover:font-bold whitespace-nowrap"><input type="radio" name="catt_${st.studentId}" value="ลากิจ" class="accent-yellow-600 mr-1" ${chkPersonal}> ลากิจ</label>
+                            <label class="text-blue-500 cursor-pointer hover:font-bold whitespace-nowrap"><input type="radio" name="catt_${st.studentId}" value="ลาแข่งขัน" class="accent-blue-500 mr-1" ${chkSport}> ลาแข่งขัน</label>
                         `;
 
                         tbody.innerHTML += `
-                            <tr class="border-b hover:bg-gray-50">
-                                <td class="p-3 text-center text-gray-500">${idx + 1}</td>
-                                <td class="p-3 font-semibold text-indigo-800">${st.studentId || '-'}</td>
-                                <td class="p-3">${st.fullName || ''}</td>
+                            <tr class="border-b hover:bg-gray-50 group">
+                                <td class="p-3 text-center text-gray-500 sticky left-0 bg-white group-hover:bg-gray-50 z-10 border-r border-gray-100">${idx + 1}</td>
+                                <td class="p-3 font-semibold text-indigo-800 sticky left-[64px] bg-white group-hover:bg-gray-50 z-10 border-r border-gray-100">${st.studentId || '-'}</td>
+                                <td class="p-3 sticky left-[144px] bg-white group-hover:bg-gray-50 z-10 border-r border-gray-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">${st.fullName || ''}</td>
                                 <td class="p-3 text-gray-600 text-xs">${displayRoom}</td>
-                                <td class="p-3 text-center"><div class="flex justify-center gap-3">${statusRadios}</div></td>
+                                <td class="p-3 text-center"><div class="flex justify-start md:justify-center gap-3 overflow-x-auto pb-1 custom-scrollbar min-w-[200px]">${statusRadios}</div></td>
                             </tr>
                         `;
                     });
@@ -2960,27 +2979,24 @@
                     const tbody = document.getElementById('classCheckTableBody');
                     tbody.innerHTML = '';
                     
-                    const isLockedLeave = (currentUserRole !== 'ผู้ดูแลระบบ');
-                    const leaveLockClass = isLockedLeave ? 'pointer-events-none opacity-50' : 'cursor-pointer hover:font-bold';
-                    const leaveTitle = isLockedLeave ? 'title="อัปเดตอัตโนมัติจากระบบแจ้งลา (ติดต่อแอดมินเพื่อแก้ไข)"' : '';
-
                     res.data.forEach((st, idx) => {
                         const statusRadios = `
-                            <label class="text-green-600 cursor-pointer hover:font-bold"><input type="radio" name="catt_${st.studentId}" value="มา" class="accent-green-600 mr-1" ${st.status === 'มา' || st.status === 'มาเรียน' ? 'checked' : ''}> มา</label>
-                            <label class="text-red-500 cursor-pointer hover:font-bold"><input type="radio" name="catt_${st.studentId}" value="ขาด" class="accent-red-500 mr-1" ${st.status === 'ขาด' ? 'checked' : ''}> ขาด</label>
-                            <label class="text-yellow-600 cursor-pointer hover:font-bold"><input type="radio" name="catt_${st.studentId}" value="สาย" class="accent-yellow-600 mr-1" ${st.status === 'สาย' ? 'checked' : ''}> สาย</label>
-                            <label class="text-yellow-500 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="catt_${st.studentId}" value="ลาป่วย" class="accent-yellow-500 mr-1" ${st.status === 'ลาป่วย' ? 'checked' : ''}> ลาป่วย</label>
-                            <label class="text-yellow-600 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="catt_${st.studentId}" value="ลากิจ" class="accent-yellow-600 mr-1" ${st.status === 'ลากิจ' || st.status === 'ลากลับบ้าน' ? 'checked' : ''}> ลากิจ</label>
-                            <label class="text-blue-500 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="catt_${st.studentId}" value="ลาแข่งขัน" class="accent-blue-500 mr-1" ${st.status === 'ลาแข่งขัน' || st.status === 'แข่งขันกีฬา' ? 'checked' : ''}> ลาแข่งขัน</label>
+                            <label class="text-green-600 cursor-pointer hover:font-bold whitespace-nowrap"><input type="radio" name="catt_${st.studentId}" value="มา" class="accent-green-600 mr-1" ${st.status === 'มา' || st.status === 'มาเรียน' ? 'checked' : ''}> มา</label>
+                            <label class="text-red-500 cursor-pointer hover:font-bold whitespace-nowrap"><input type="radio" name="catt_${st.studentId}" value="ขาด" class="accent-red-500 mr-1" ${st.status === 'ขาด' ? 'checked' : ''}> ขาด</label>
+                            <label class="text-yellow-600 cursor-pointer hover:font-bold whitespace-nowrap"><input type="radio" name="catt_${st.studentId}" value="สาย" class="accent-yellow-600 mr-1" ${st.status === 'สาย' ? 'checked' : ''}> สาย</label>
+                            <label class="text-purple-600 cursor-pointer hover:font-bold whitespace-nowrap"><input type="radio" name="catt_${st.studentId}" value="หนีเรียน" class="accent-purple-600 mr-1" ${st.status === 'หนีเรียน' ? 'checked' : ''}> หนีเรียน</label>
+                            <label class="text-yellow-500 cursor-pointer hover:font-bold whitespace-nowrap"><input type="radio" name="catt_${st.studentId}" value="ลาป่วย" class="accent-yellow-500 mr-1" ${st.status === 'ลาป่วย' ? 'checked' : ''}> ลาป่วย</label>
+                            <label class="text-yellow-600 cursor-pointer hover:font-bold whitespace-nowrap"><input type="radio" name="catt_${st.studentId}" value="ลากิจ" class="accent-yellow-600 mr-1" ${st.status === 'ลากิจ' || st.status === 'ลากลับบ้าน' ? 'checked' : ''}> ลากิจ</label>
+                            <label class="text-blue-500 cursor-pointer hover:font-bold whitespace-nowrap"><input type="radio" name="catt_${st.studentId}" value="ลาแข่งขัน" class="accent-blue-500 mr-1" ${st.status === 'ลาแข่งขัน' || st.status === 'แข่งขันกีฬา' ? 'checked' : ''}> ลาแข่งขัน</label>
                         `;
 
                         tbody.innerHTML += `
-                            <tr class="border-b hover:bg-gray-50 bg-indigo-50">
-                                <td class="p-3 text-center text-gray-500">${idx + 1}</td>
-                                <td class="p-3 font-semibold text-indigo-800">${st.studentId || '-'}</td>
-                                <td class="p-3">${st.fullName || ''}</td>
+                            <tr class="border-b hover:bg-gray-50 bg-indigo-50 group">
+                                <td class="p-3 text-center text-gray-500 sticky left-0 bg-indigo-50 group-hover:bg-gray-50 z-10 border-r border-indigo-100">${idx + 1}</td>
+                                <td class="p-3 font-semibold text-indigo-800 sticky left-[64px] bg-indigo-50 group-hover:bg-gray-50 z-10 border-r border-indigo-100">${st.studentId || '-'}</td>
+                                <td class="p-3 sticky left-[144px] bg-indigo-50 group-hover:bg-gray-50 z-10 border-r border-indigo-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">${st.fullName || '-'}</td>
                                 <td class="p-3 text-gray-600 text-xs">${st.room || '-'}</td>
-                                <td class="p-3 text-center"><div class="flex justify-center gap-3">${statusRadios}</div></td>
+                                <td class="p-3 text-center"><div class="flex justify-start md:justify-center gap-3 overflow-x-auto pb-1 custom-scrollbar min-w-[200px]">${statusRadios}</div></td>
                             </tr>
                         `;
                     });
@@ -3020,7 +3036,9 @@
             const isUpdateFlag = isUpdateInput ? isUpdateInput.value : 'false';
             
             const records = [];
-            let allChecked = true;
+            const leavesToCreateByType = {}; // เปลี่ยนเป็นออบเจกต์เพื่อจัดกลุ่มการลาตามประเภท
+            const classDate = document.getElementById('classDate').value;
+            const totalStudents = document.querySelectorAll('#classCheckTableBody tr[class*="border-b"]').length;
 
             formData.forEach((value, key) => {
                 if(key.startsWith('catt_')) {
@@ -3036,20 +3054,30 @@
                     }
 
                     records.push({ studentId: sId, fullName: stFullName, status: value });
+
+                    // หากครูติ๊กเลือกสถานะเกี่ยวกับการลา ให้เตรียมข้อมูลบันทึกในหน้าแจ้งลา
+                    if (['ลาป่วย', 'ลากิจ', 'ลากลับบ้าน', 'ลาแข่งขัน', 'แข่งขันกีฬา'].includes(value)) {
+                        let leaveType = value;
+                        if (value === 'ลาแข่งขัน') leaveType = 'แข่งขันกีฬา';
+                        if (value === 'ลากลับบ้าน') leaveType = 'ลากิจ'; // Map เข้ากับประเภทการลามาตรฐาน
+
+                        // ตรวจสอบว่ามีข้อมูลลานี้ในวันดังกล่าวแล้วหรือยัง (ป้องกันการลาซ้ำซ้อน 100%)
+                        const existingLeave = getStudentLeaveType(sId, classDate);
+                        if (!existingLeave) {
+                            if (!leavesToCreateByType[leaveType]) leavesToCreateByType[leaveType] = [];
+                            leavesToCreateByType[leaveType].push(`${sId} - ${stFullName}`);
+                        }
+                    }
                 }
             });
 
-            // ตรวจสอบว่าเช็คชื่อครบทุกคนหรือไม่
-            const trs = document.querySelectorAll('#classCheckTableBody tr:not(:first-child)'); 
-            const totalStudents = document.querySelectorAll('#classCheckTableBody tr[class*="border-b"]').length;
-            
             if(records.length === 0) return showToast("ไม่มีข้อมูลนักเรียนให้บันทึก", "error");
             if(records.length < totalStudents) {
                  return showToast(`กรุณาเช็คชื่อนักเรียนให้ครบทุกคน (เช็คไปแล้ว ${records.length}/${totalStudents})`, "warning");
             }
 
             const payloadObj = {
-                c_date: document.getElementById('classDate').value,
+                c_date: classDate,
                 c_period: document.getElementById('hidden_c_period').value,
                 c_subject: document.getElementById('hidden_c_subject').value,
                 c_room: document.getElementById('hidden_c_room').value,
@@ -3062,7 +3090,43 @@
 
             sendPOST('saveClassCheck', { payload: JSON.stringify(payloadObj) }, function(res) {
                 if(res.status === 'success') {
-                    showToast(isUpdateFlag === 'true' ? "อัปเดตข้อมูลการเข้าเรียนเดิมสำเร็จ!" : "บันทึกการเช็คชื่อเข้าเรียนสำเร็จ!", "success");
+                    // --- ทำการบันทึกข้อมูลการลา (Sync) โดยเรียกใช้งาน API ของหน้าแจ้งลาโดยตรง ---
+                    const types = Object.keys(leavesToCreateByType);
+                    if (types.length > 0) {
+                        const formatDateToBuddhist = (isoDateString) => {
+                            if(!isoDateString) return "";
+                            const d = new Date(isoDateString);
+                            if (isNaN(d.getTime())) return isoDateString;
+                            return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear() + 543}`;
+                        };
+                        const todayIso = new Date().toISOString().split('T')[0];
+
+                        types.forEach(type => {
+                            const leavePayload = {
+                                l_date: todayIso,
+                                l_recorder: currentUserName,
+                                recorderName: currentUserName,
+                                l_student: leavesToCreateByType[type].join(', '),
+                                l_type: type,
+                                l_start_date: classDate,
+                                l_end_date: classDate,
+                                l_days: 1,
+                                l_date_be: formatDateToBuddhist(todayIso),
+                                l_start_date_be: formatDateToBuddhist(classDate),
+                                l_end_date_be: formatDateToBuddhist(classDate)
+                            };
+                            // บันทึกลงระบบแจ้งลาทันที
+                            sendPOST('saveLeave', { payload: JSON.stringify(leavePayload) }, function(lRes) {
+                                if (lRes.status === 'success') {
+                                    masterLeaveData = [];
+                                    fetchAllLeaves(); // โหลดข้อมูลลาใหม่ให้เป็นปัจจุบันให้เห็นในหน้าแจ้งลาทันที
+                                }
+                            });
+                        });
+                    }
+                    // ----------------------------------------------------
+
+                    showToast(isUpdateFlag === 'true' ? "อัปเดตข้อมูลการเข้าเรียนเดิมสำเร็จ!" : "บันทึกการเข้าเรียนสำเร็จ พร้อมลงบันทึกการลาอัตโนมัติเรียบร้อย!", "success");
                     document.getElementById('classCheckTableBody').innerHTML = `<tr><td colspan="5" class="p-8 text-center text-gray-400"><i class="fas fa-check-circle text-2xl mb-2 text-green-500 block"></i> บันทึกข้อมูลเรียบร้อยแล้ว<br>กรุณาเลือกรายวิชาอื่นเพื่อทำรายการต่อ</td></tr>`;
                     document.getElementById('btnSaveClassCheck').classList.add('hidden');
                     if(isUpdateInput) isUpdateInput.value = 'false';
@@ -3070,16 +3134,17 @@
                     const btnSelectAll = document.getElementById('btnSelectAllClass');
                     if(btnSelectAll) btnSelectAll.classList.add('hidden');
 
-                    // บันทึกสถานะว่าคาบนี้ของวันนี้ถูกบันทึกแล้ว
                     const subjectCodeParts = document.getElementById('hidden_c_subject').value.split(' ');
                     const sCodeOnly = subjectCodeParts[0]; 
-                    const saveKey = `rsct_saved_class_${currentUserName}_${document.getElementById('classDate').value}_${document.getElementById('hidden_c_period').value}_${sCodeOnly}`;
+                    const saveKey = `rsct_saved_class_${currentUserName}_${classDate}_${document.getElementById('hidden_c_period').value}_${sCodeOnly}`;
                     localStorage.setItem(saveKey, 'true');
 
-                    // ซ่อนปุ่มดึงรายชื่อใหม่
                     const btnLoadNew = document.getElementById('btnLoadNewClassCheck');
                     if(btnLoadNew) btnLoadNew.classList.add('hidden');
 
+                    // รีโหลดข้อมูลการลาส่วนกลางให้เป็นเวอร์ชันล่าสุด
+                    masterLeaveData = [];
+                    fetchAllLeaves();
                 } else {
                     showToast("เกิดข้อผิดพลาด: " + (res.message || "การเชื่อมต่อล้มเหลว"), "error");
                 }
@@ -3610,41 +3675,56 @@
             }
         }
 
+        // ================= สคริปต์ประมวลผลกล่องข้อมูล (Dashboard) =================
         function updateDashboardStats() {
-            // โหลดข้อมูลรวมของรายงานมาใช้คำนวณ เพื่อให้ตรรกะและข้อมูลตรงกับหน้ารายงาน 100%
             if (!allReportDataCache) {
-                // โหลดแบบ Background (ไม่ขึ้น Loader กวนใจ)
+                // โหลดข้อมูลแบบ Background
                 const callbackName = 'jsonp_cb_' + Math.round(100000 * Math.random());
                 const url = `${SCRIPT_URL}?action=getReportDataByDate&callback=${callbackName}`;
                 window[callbackName] = function(data) {
                     delete window[callbackName];
                     if (data.status === 'success') {
                         allReportDataCache = data.data;
-                        processDashboardStatsCalculation();
+                        processDashboardCalculation();
                     }
                 };
                 const script = document.createElement('script');
                 script.src = url;
                 document.body.appendChild(script);
             } else {
-                processDashboardStatsCalculation();
+                processDashboardCalculation();
             }
         }
 
-        function processDashboardStatsCalculation() {
+        function processDashboardCalculation() {
             if (!allReportDataCache) return;
 
             const allStudents = allReportDataCache.students || [];
             const allLeaves = allReportDataCache.leaves || [];
             const routineLogs = allReportDataCache.routineLogs || [];
+            const classLogs = allReportDataCache.classLogs || allReportDataCache.classRecords || []; 
 
-            let totalStudents = 0;
-            allStudents.forEach(s => {
-                if(s['รหัสประจำตัว'] || s['ชื่อ-สกุล']) totalStudents++; 
-            });
+            // --- ฟังก์ชันย่อยสำหรับแปลงวันที่ให้ปลอดภัย (ไม่ทำให้ระบบ Error) ---
+            const parseSafeDate = (dStr) => {
+                if (!dStr) return new Date('invalid');
+                let d = String(dStr).split(' ')[0].split('T')[0];
+                if (d.includes('/')) {
+                    let p = d.split('/');
+                    let y = parseInt(p[2]);
+                    if (y > 2500) y -= 543; // แปลง พ.ศ. เป็น ค.ศ.
+                    return new Date(y, parseInt(p[1]) - 1, parseInt(p[0]));
+                } else if (d.includes('-')) {
+                    let p = d.split('-');
+                    let y = parseInt(p[0]);
+                    if (y > 2500) y -= 543;
+                    return new Date(y, parseInt(p[1]) - 1, parseInt(p[2]));
+                }
+                return new Date(d);
+            };
 
             // --- ประมวลผลวันที่ตามตัวกรอง ---
-            const filterType = document.getElementById('dash_date_filter') ? document.getElementById('dash_date_filter').value : 'today';
+            const filterElem = document.getElementById('dash_date_filter');
+            const filterType = filterElem ? filterElem.value : 'today';
             let dStart = new Date(); dStart.setHours(0,0,0,0);
             let dEnd = new Date(); dEnd.setHours(23,59,59,999);
 
@@ -3652,136 +3732,114 @@
                 dStart.setDate(dStart.getDate() - 1);
                 dEnd.setDate(dEnd.getDate() - 1);
             } else if (filterType === 'custom') {
-                const sVal = document.getElementById('dash_start_date').value;
-                const eVal = document.getElementById('dash_end_date').value;
+                const sVal = document.getElementById('dash_start_date') ? document.getElementById('dash_start_date').value : null;
+                const eVal = document.getElementById('dash_end_date') ? document.getElementById('dash_end_date').value : null;
                 if (sVal) dStart = new Date(sVal);
-                else document.getElementById('dash_start_date').valueAsDate = dStart;
-                
                 if (eVal) { dEnd = new Date(eVal); dEnd.setHours(23,59,59,999); } 
-                else { dEnd = new Date(dStart); dEnd.setHours(23,59,59,999); document.getElementById('dash_end_date').valueAsDate = dEnd; }
             }
 
-            const dateRange = { start: dStart, end: dEnd };
-
-            // --- คำนวณผู้ที่ลาระหว่างช่วงวันที่เลือก ---
+            // ============================================
+            // 1. คำนวณผู้ที่ลา (กรองคนซ้ำอัตโนมัติ)
+            // ============================================
             let leaveIds = new Set();
             allLeaves.forEach(leave => {
                 if(leave['สถานะ'] && leave['สถานะ'] !== 'อนุมัติแล้ว') return;
-
-                // รองรับชื่อคอลัมน์หลายแบบที่ดึงมาจากฐานข้อมูล
                 let startStr = leave['ตั้งแต่วันที่ (พ.ศ.)'] || leave['ตั้งแต่วันที่'] || leave['วันที่ลา'];
-                let endStr = leave['ถึงวันที่ (พ.ศ.)'] || leave['ถึงวันที่'];
+                let endStr = leave['ถึงวันที่ (พ.ศ.)'] || leave['ถึงวันที่'] || startStr;
                 
-                if(startStr) {
-                    let pStart = startStr.split('/');
-                    if(pStart.length === 3) {
-                        let ldStart = new Date(parseInt(pStart[2])-543, parseInt(pStart[1])-1, parseInt(pStart[0]));
-                        ldStart.setHours(0,0,0,0);
-                        
-                        let ldEnd = ldStart;
-                        if(endStr && endStr !== '-') {
-                            let pEnd = endStr.split('/');
-                            if(pEnd.length === 3) {
-                                ldEnd = new Date(parseInt(pEnd[2])-543, parseInt(pEnd[1])-1, parseInt(pEnd[0]));
-                                ldEnd.setHours(23,59,59,999);
-                            }
-                        } else {
-                            ldEnd.setHours(23,59,59,999);
-                        }
-                        
-                        // ถ้าระยะเวลาลา คร่อม หรือ ชน กับช่วงที่ฟิลเตอร์ (Overlap Logic)
-                        if(dateRange.end >= ldStart && dateRange.start <= ldEnd) {
-                            let stList = leave['รหัส/ชื่อนักเรียน'] || leave['นักเรียน'] || '';
-                            if(stList) {
-                                let sts = stList.split(',');
-                                sts.forEach(s => leaveIds.add(s.split('-')[0].trim()));
-                            }
-                        }
+                let ldStart = parseSafeDate(startStr);
+                let ldEnd = parseSafeDate(endStr);
+                ldEnd.setHours(23,59,59,999);
+                
+                if(!isNaN(ldStart) && dEnd >= ldStart && dStart <= ldEnd) {
+                    let stList = leave['รหัส/ชื่อนักเรียน'] || leave['นักเรียน'] || '';
+                    if(stList) {
+                        stList.split(',').forEach(s => leaveIds.add(s.split('-')[0].trim()));
                     }
                 }
             });
             let leavesCount = leaveIds.size;
 
-            // --- ดึงข้อมูลเช็คชื่อ "อยู่" จากชีตกิจวัตร(หอพัก) ที่มีการเช็คในช่วงนั้นๆ มาแสดงผลตรงๆ ---
-            let presentCount = 0;
-            let dormRoutineDays = new Set();
+            // ============================================
+            // 2 & 4. คำนวณกิจกรรมหน้าเสาธง ("มา") และ หอพัก ("อยู่")
+            // ============================================
+            let flagPresentCount = 0;
+            let dormPresentCount = 0;
 
             routineLogs.forEach(log => {
-                let rDate = log['วันที่'];
-                if (!rDate) return;
+                let rDateObj = parseSafeDate(log['วันที่']);
+                if (isNaN(rDateObj)) return;
                 
-                let rDateObj = null;
-                if (rDate.indexOf('-') > -1) { 
-                    let dParts = rDate.split(' ')[0].split('-');
-                    if(dParts.length === 3) {
-                        let y = parseInt(dParts[0], 10);
-                        if(y < 2400) y += 543;
-                        rDateObj = new Date(y-543, parseInt(dParts[1], 10)-1, parseInt(dParts[2], 10));
-                    }
-                } else if (rDate.indexOf('/') > -1) {
-                    let dParts = rDate.split(' ')[0].split('/');
-                    if(dParts.length === 3) {
-                        let p1 = parseInt(dParts[0], 10);
-                        let p2 = parseInt(dParts[1], 10);
-                        let p3 = parseInt(dParts[2], 10);
-                        let dy, m, y;
-                        if(p1 > 1000) { y = p1; m = p2; dy = p3; } else { dy = p1; m = p2; y = p3; }
-                        if(y < 2400) y += 543;
-                        rDateObj = new Date(y-543, m-1, dy);
-                    }
-                } else {
-                    rDateObj = new Date(rDate);
-                }
-                
-                if (!rDateObj || isNaN(rDateObj.getTime())) return;
-                rDateObj.setHours(12,0,0,0);
-                
-                let routineName = log['กิจวัตร'] || log['รายการกิจวัตร'] || log['รายการ'] || '';
-                let isDormRoutine = String(routineName).includes('อยู่หอ') || String(routineName).includes('นักเรียนอยู่หอ');
-                
-                if (rDateObj >= dateRange.start && rDateObj <= dateRange.end) {
-                    if (isDormRoutine) {
-                        dormRoutineDays.add(rDateObj.getTime());
-                        try {
-                            let jsonStr = log['ข้อมูลการเช็คชื่อ'] || log['รายละเอียด'] || '[]';
-                            let records = JSON.parse(jsonStr);
-                            records.forEach(rec => {
-                                if (rec.status === 'อยู่') {
-                                    presentCount++;
-                                }
-                            });
-                        } catch(e) {
-                            if (log['สถานะ'] === 'อยู่') {
-                                presentCount++;
-                            }
-                        }
+                if (rDateObj >= dStart && rDateObj <= dEnd) {
+                    let routineName = String(log['กิจวัตร'] || log['รายการกิจวัตร'] || log['รายการ'] || '');
+                    let isDormRoutine = routineName.includes('อยู่หอ') || routineName.includes('หอพัก');
+                    let isFlagRoutine = routineName.includes('หน้าเสาธง');
+                    
+                    try {
+                        let jsonStr = log['ข้อมูลการเช็คชื่อ'] || log['รายละเอียด'] || '[]';
+                        let records = JSON.parse(jsonStr);
+                        records.forEach(rec => { 
+                            if (isDormRoutine && (rec.status === 'อยู่' || rec.status === 'มา')) dormPresentCount++;
+                            if (isFlagRoutine && (rec.status === 'มา' || rec.status === 'มาเรียน')) flagPresentCount++;
+                        });
+                    } catch(e) {
+                        if (isDormRoutine && (log['สถานะ'] === 'อยู่' || log['สถานะ'] === 'มา')) dormPresentCount++;
+                        if (isFlagRoutine && (log['สถานะ'] === 'มา' || log['สถานะ'] === 'มาเรียน')) flagPresentCount++;
                     }
                 }
             });
 
-            let presentStudents = 0;
-            if (dormRoutineDays.size > 0) {
-                presentStudents = Math.round(presentCount / dormRoutineDays.size);
-            } else {
-                presentStudents = 0;
-            }
+            // ============================================
+            // 3. คำนวณนักเรียนหนีเรียน (รายวิชา) ไม่นับซ้ำ
+            // ============================================
+            let skipStudentIds = new Set();
+            classLogs.forEach(log => {
+                let cDateObj = parseSafeDate(log['วันที่เรียน'] || log['วันที่เช็ค'] || log['วันที่']);
+                if (isNaN(cDateObj)) return;
 
-            // ปรับข้อความ Label ตามตัวกรอง
-            let lblPresent = document.getElementById('lbl_dash_present');
-            let lblLeave = document.getElementById('lbl_dash_leave');
-            if (lblPresent && lblLeave) {
-                if (filterType === 'today') { lblPresent.innerText = "อยู่หอพักวันนี้ (คงเหลือ)"; lblLeave.innerText = "แจ้งลาในวันนี้"; }
-                else if (filterType === 'yesterday') { lblPresent.innerText = "อยู่หอพักเมื่อวาน (คงเหลือ)"; lblLeave.innerText = "แจ้งลาเมื่อวาน"; }
-                else { lblPresent.innerText = "อยู่หอพักในช่วงเวลา (เฉลี่ย)"; lblLeave.innerText = "ผู้ที่ลาระหว่างช่วงเวลา"; }
-            }
+                if (cDateObj >= dStart && cDateObj <= dEnd) {
+                    try {
+                        let jsonStr = log['ข้อมูลเช็คชื่อ'] || log['ข้อมูลการเช็คชื่อ'] || log['รายละเอียด'] || '[]';
+                        let records = JSON.parse(jsonStr);
+                        records.forEach(rec => {
+                            if (rec.status === 'หนีเรียน' || rec.status === 'หนี') {
+                                skipStudentIds.add(rec.studentId || rec.id);
+                            }
+                        });
+                    } catch(e) {
+                        let status = log['สถานะ'] || '';
+                        if (status.includes('หนี')) {
+                            let sId = log['รหัสประจำตัว'] || log['รหัส'] || '';
+                            if(sId) skipStudentIds.add(sId);
+                        }
+                    }
+                }
+            });
+            let skipCount = skipStudentIds.size;
 
-            // แสดงผลตัวเลขพร้อมแอนิเมชัน
-            const elTotal = document.getElementById("dash_total_student_val");
-            if(elTotal) {
-                animateValue("dash_total_student_val", parseInt(elTotal.innerText) || 0, totalStudents, 800);
-                animateValue("dash_present_student_val", parseInt(document.getElementById("dash_present_student_val").innerText) || 0, presentStudents, 800);
-                animateValue("dash_leave_student_val", parseInt(document.getElementById("dash_leave_student_val").innerText) || 0, leavesCount, 800);
-            }
+            // ============================================
+            // แสดงผลตัวเลขขึ้นบน Dashboard
+            // ============================================
+            const updateUI = (id, val, lblId, lblText) => {
+                const el = document.getElementById(id);
+                if(el) {
+                    if (typeof animateValue === "function") {
+                        let startVal = parseInt(el.innerText) || 0;
+                        animateValue(id, startVal, val, 800);
+                    } else {
+                        el.innerText = val;
+                    }
+                }
+                const lbl = document.getElementById(lblId);
+                if (lbl) lbl.innerText = lblText;
+            };
+
+            let suffix = filterType === 'today' ? " วันนี้" : (filterType === 'yesterday' ? " เมื่อวาน" : " ในช่วงเวลาที่เลือก");
+
+            updateUI("dash_flag_present_val", flagPresentCount, "lbl_dash_flag_present", "มาเรียน (หน้าเสาธง)" + suffix);
+            updateUI("dash_leave_val", leavesCount, "lbl_dash_leave", "นักเรียนที่แจ้งลา" + suffix);
+            updateUI("dash_skip_val", skipCount, "lbl_dash_skip", "หนีเรียน (รายวิชา)" + suffix);
+            updateUI("dash_dorm_present_val", dormPresentCount, "lbl_dash_dorm_present", "อยู่หอพัก (คงเหลือ)" + suffix);
         }
 
         // ฟังก์ชันดึงเวรนักเรียนมาแสดงเฉพาะในวันปัจจุบัน
@@ -4400,10 +4458,6 @@
                         return String(a.studentId).localeCompare(String(b.studentId));
                     });
                     
-                    const isLockedLeave = (currentUserRole !== 'ผู้ดูแลระบบ');
-                    const leaveLockClass = isLockedLeave ? 'pointer-events-none opacity-50' : 'cursor-pointer hover:font-bold';
-                    const leaveTitle = isLockedLeave ? 'title="อัปเดตอัตโนมัติจากระบบแจ้งลา (ติดต่อแอดมินเพื่อแก้ไข)"' : '';
-
                     sortedStudents.forEach((st, idx) => {
                         const displayRoom = (st.room && st.room !== '-') ? `${st.level}/${st.room}` : st.level;
                         const leaveType = getStudentLeaveType(st.studentId, routineDate);
@@ -4414,9 +4468,9 @@
                             const chkDuty = ''; // เอาติ๊กอัตโนมัติออก ให้ครูเลือกเอง
                             const chkLeave = isLeave ? 'checked' : '';
                             statusRadios = `
-                                <label class="text-green-600 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="ทำเวร" class="accent-green-600 mr-1" ${chkDuty}> ทำเวร</label>
-                                <label class="text-red-500 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="ไม่ทำเวร" class="accent-red-500 mr-1"> ไม่ทำเวร</label>
-                                <label class="text-yellow-500 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="att_${st.studentId}" value="ลา" class="accent-yellow-500 mr-1" ${chkLeave}> ลา</label>
+                                <label class="text-green-600 cursor-pointer hover:font-bold whitespace-nowrap"><input type="radio" name="att_${st.studentId}" value="ทำเวร" class="accent-green-600 mr-1" ${chkDuty}> ทำเวร</label>
+                                <label class="text-red-500 cursor-pointer hover:font-bold whitespace-nowrap"><input type="radio" name="att_${st.studentId}" value="ไม่ทำเวร" class="accent-red-500 mr-1"> ไม่ทำเวร</label>
+                                <label class="text-yellow-500 cursor-pointer hover:font-bold whitespace-nowrap"><input type="radio" name="att_${st.studentId}" value="ลา" class="accent-yellow-500 mr-1" ${chkLeave}> ลา</label>
                             `;
                         } else if (isDormRoutine) {
                             const chkHere = ''; // เอาติ๊กอัตโนมัติออก ให้ครูเลือกเอง
@@ -4424,11 +4478,11 @@
                             const chkPersonal = (leaveType === 'ลากิจ' || leaveType === 'ลากลับบ้าน') ? 'checked' : '';
                             const chkSport = (leaveType === 'แข่งขันกีฬา' || leaveType === 'ลาแข่งขัน') ? 'checked' : '';
                             statusRadios = `
-                                <label class="text-green-600 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="อยู่" class="accent-green-600 mr-1" ${chkHere}> อยู่</label>
-                                <label class="text-red-500 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="ไม่อยู่" class="accent-red-500 mr-1"> ไม่อยู่</label>
-                                <label class="text-yellow-500 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="att_${st.studentId}" value="ลาป่วย" class="accent-yellow-500 mr-1" ${chkSick}> ลาป่วย</label>
-                                <label class="text-yellow-600 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="att_${st.studentId}" value="ลากิจ" class="accent-yellow-600 mr-1" ${chkPersonal}> ลากิจ</label>
-                                <label class="text-blue-500 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="att_${st.studentId}" value="ลาแข่งขัน" class="accent-blue-500 mr-1" ${chkSport}> ลาแข่งขัน</label>
+                                <label class="text-green-600 cursor-pointer hover:font-bold whitespace-nowrap"><input type="radio" name="att_${st.studentId}" value="อยู่" class="accent-green-600 mr-1" ${chkHere}> อยู่</label>
+                                <label class="text-red-500 cursor-pointer hover:font-bold whitespace-nowrap"><input type="radio" name="att_${st.studentId}" value="ไม่อยู่" class="accent-red-500 mr-1"> ไม่อยู่</label>
+                                <label class="text-yellow-500 cursor-pointer hover:font-bold whitespace-nowrap"><input type="radio" name="att_${st.studentId}" value="ลาป่วย" class="accent-yellow-500 mr-1" ${chkSick}> ลาป่วย</label>
+                                <label class="text-yellow-600 cursor-pointer hover:font-bold whitespace-nowrap"><input type="radio" name="att_${st.studentId}" value="ลากิจ" class="accent-yellow-600 mr-1" ${chkPersonal}> ลากิจ</label>
+                                <label class="text-blue-500 cursor-pointer hover:font-bold whitespace-nowrap"><input type="radio" name="att_${st.studentId}" value="ลาแข่งขัน" class="accent-blue-500 mr-1" ${chkSport}> ลาแข่งขัน</label>
                             `;
                         } else if (isPrayRoutine) {
                             const chkPray = ''; // เอาติ๊กอัตโนมัติออก ให้ครูเลือกเอง
@@ -4436,12 +4490,12 @@
                             const chkPersonal = (leaveType === 'ลากิจ' || leaveType === 'ลากลับบ้าน') ? 'checked' : '';
                             const chkSport = (leaveType === 'แข่งขันกีฬา' || leaveType === 'ลาแข่งขัน') ? 'checked' : '';
                             statusRadios = `
-                                <label class="text-green-600 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="ละหมาด" class="accent-green-600 mr-1" ${chkPray}> ละหมาด</label>
-                                <label class="text-pink-500 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="ประจำเดือน" class="accent-pink-500 mr-1"> ประจำเดือน</label>
-                                <label class="text-red-500 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="ไม่ละหมาด" class="accent-red-500 mr-1"> ไม่ละหมาด</label>
-                                <label class="text-yellow-500 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="att_${st.studentId}" value="ลาป่วย" class="accent-yellow-500 mr-1" ${chkSick}> ลาป่วย</label>
-                                <label class="text-yellow-600 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="att_${st.studentId}" value="ลากิจ" class="accent-yellow-600 mr-1" ${chkPersonal}> ลากิจ</label>
-                                <label class="text-blue-500 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="att_${st.studentId}" value="ลาแข่งขัน" class="accent-blue-500 mr-1" ${chkSport}> ลาแข่งขัน</label>
+                                <label class="text-green-600 cursor-pointer hover:font-bold whitespace-nowrap"><input type="radio" name="att_${st.studentId}" value="ละหมาด" class="accent-green-600 mr-1" ${chkPray}> ละหมาด</label>
+                                <label class="text-pink-500 cursor-pointer hover:font-bold whitespace-nowrap"><input type="radio" name="att_${st.studentId}" value="ประจำเดือน" class="accent-pink-500 mr-1"> ประจำเดือน</label>
+                                <label class="text-red-500 cursor-pointer hover:font-bold whitespace-nowrap"><input type="radio" name="att_${st.studentId}" value="ไม่ละหมาด" class="accent-red-500 mr-1"> ไม่ละหมาด</label>
+                                <label class="text-yellow-500 cursor-pointer hover:font-bold whitespace-nowrap"><input type="radio" name="att_${st.studentId}" value="ลาป่วย" class="accent-yellow-500 mr-1" ${chkSick}> ลาป่วย</label>
+                                <label class="text-yellow-600 cursor-pointer hover:font-bold whitespace-nowrap"><input type="radio" name="att_${st.studentId}" value="ลากิจ" class="accent-yellow-600 mr-1" ${chkPersonal}> ลากิจ</label>
+                                <label class="text-blue-500 cursor-pointer hover:font-bold whitespace-nowrap"><input type="radio" name="att_${st.studentId}" value="ลาแข่งขัน" class="accent-blue-500 mr-1" ${chkSport}> ลาแข่งขัน</label>
                             `;
                         } else if (isFlagRoutine) {
                             const chkHere = ''; // เอาติ๊กอัตโนมัติออก ให้ครูเลือกเอง
@@ -4449,21 +4503,21 @@
                             const chkPersonal = (leaveType === 'ลากิจ' || leaveType === 'ลากลับบ้าน') ? 'checked' : '';
                             const chkSport = (leaveType === 'แข่งขันกีฬา' || leaveType === 'ลาแข่งขัน') ? 'checked' : '';
                             statusRadios = `
-                                <label class="text-green-600 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="มา" class="accent-green-600 mr-1" ${chkHere}> มา</label>
-                                <label class="text-red-500 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="ขาด" class="accent-red-500 mr-1"> ขาด</label>
-                                <label class="text-yellow-600 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="สาย" class="accent-yellow-600 mr-1"> สาย</label>
-                                <label class="text-yellow-500 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="att_${st.studentId}" value="ลาป่วย" class="accent-yellow-500 mr-1" ${chkSick}> ลาป่วย</label>
-                                <label class="text-yellow-600 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="att_${st.studentId}" value="ลากิจ" class="accent-yellow-600 mr-1" ${chkPersonal}> ลากิจ</label>
-                                <label class="text-blue-500 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="att_${st.studentId}" value="ลาแข่งขัน" class="accent-blue-500 mr-1" ${chkSport}> ลาแข่งขัน</label>
+                                <label class="text-green-600 cursor-pointer hover:font-bold whitespace-nowrap"><input type="radio" name="att_${st.studentId}" value="มา" class="accent-green-600 mr-1" ${chkHere}> มา</label>
+                                <label class="text-red-500 cursor-pointer hover:font-bold whitespace-nowrap"><input type="radio" name="att_${st.studentId}" value="ขาด" class="accent-red-500 mr-1"> ขาด</label>
+                                <label class="text-yellow-600 cursor-pointer hover:font-bold whitespace-nowrap"><input type="radio" name="att_${st.studentId}" value="สาย" class="accent-yellow-600 mr-1"> สาย</label>
+                                <label class="text-yellow-500 cursor-pointer hover:font-bold whitespace-nowrap"><input type="radio" name="att_${st.studentId}" value="ลาป่วย" class="accent-yellow-500 mr-1" ${chkSick}> ลาป่วย</label>
+                                <label class="text-yellow-600 cursor-pointer hover:font-bold whitespace-nowrap"><input type="radio" name="att_${st.studentId}" value="ลากิจ" class="accent-yellow-600 mr-1" ${chkPersonal}> ลากิจ</label>
+                                <label class="text-blue-500 cursor-pointer hover:font-bold whitespace-nowrap"><input type="radio" name="att_${st.studentId}" value="ลาแข่งขัน" class="accent-blue-500 mr-1" ${chkSport}> ลาแข่งขัน</label>
                             `;
                         } else {
                             const chkHere = ''; // เอาติ๊กอัตโนมัติออก ให้ครูเลือกเอง
                             const chkLeave = isLeave ? 'checked' : '';
                             statusRadios = `
-                                <label class="text-green-600 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="อยู่" class="accent-green-600 mr-1" ${chkHere}> อยู่</label>
-                                <label class="text-red-500 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="ไม่อยู่" class="accent-red-500 mr-1"> ไม่อยู่</label>
-                                <label class="text-yellow-500 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="att_${st.studentId}" value="ลา" class="accent-yellow-500 mr-1" ${chkLeave}> ลา</label>
-                                <label class="text-purple-600 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="หนี" class="accent-purple-600 mr-1"> หนี</label>
+                                <label class="text-green-600 cursor-pointer hover:font-bold whitespace-nowrap"><input type="radio" name="att_${st.studentId}" value="อยู่" class="accent-green-600 mr-1" ${chkHere}> อยู่</label>
+                                <label class="text-red-500 cursor-pointer hover:font-bold whitespace-nowrap"><input type="radio" name="att_${st.studentId}" value="ไม่อยู่" class="accent-red-500 mr-1"> ไม่อยู่</label>
+                                <label class="text-yellow-500 cursor-pointer hover:font-bold whitespace-nowrap"><input type="radio" name="att_${st.studentId}" value="ลา" class="accent-yellow-500 mr-1" ${chkLeave}> ลา</label>
+                                <label class="text-purple-600 cursor-pointer hover:font-bold whitespace-nowrap"><input type="radio" name="att_${st.studentId}" value="หนี" class="accent-purple-600 mr-1"> หนี</label>
                             `;
                         }
 
@@ -4471,13 +4525,13 @@
                         const sportDisplay = isDormRoutine ? `<span class="text-rsct-red font-bold bg-red-50 px-2 py-1 rounded border border-red-100">${st.sportType || '-'}</span>` : (st.sportType || '-');
 
                         tbody.innerHTML += `
-                            <tr class="border-b hover:bg-gray-50">
-                                <td class="p-3 text-center text-gray-500">${idx + 1}</td>
-                                <td class="p-3 font-semibold text-blue-800">${st.studentId || '-'}</td>
-                                <td class="p-3">${st.fullName || ''}</td>
+                            <tr class="border-b hover:bg-gray-50 group">
+                                <td class="p-3 text-center text-gray-500 sticky left-0 bg-white group-hover:bg-gray-50 z-10 border-r border-gray-100">${idx + 1}</td>
+                                <td class="p-3 font-semibold text-blue-800 sticky left-[64px] bg-white group-hover:bg-gray-50 z-10 border-r border-gray-100">${st.studentId || '-'}</td>
+                                <td class="p-3 sticky left-[160px] bg-white group-hover:bg-gray-50 z-10 border-r border-gray-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">${st.fullName || ''}</td>
                                 <td class="p-3 text-gray-600">${displayRoom}</td>
                                 <td class="p-3 text-xs whitespace-nowrap">${sportDisplay}</td>
-                                <td class="p-3 text-center"><div class="flex justify-center gap-3">${statusRadios}</div></td>
+                                <td class="p-3 text-center"><div class="flex justify-start md:justify-center gap-3 overflow-x-auto pb-1 custom-scrollbar min-w-[200px]">${statusRadios}</div></td>
                             </tr>
                         `;
                     });
@@ -4578,10 +4632,6 @@
             const tbody = document.getElementById('routineCheckTableBody');
             tbody.innerHTML = '';
             
-            const isLockedLeave = (currentUserRole !== 'ผู้ดูแลระบบ');
-            const leaveLockClass = isLockedLeave ? 'pointer-events-none opacity-50' : 'cursor-pointer hover:font-bold';
-            const leaveTitle = isLockedLeave ? 'title="อัปเดตอัตโนมัติจากระบบแจ้งลา (ติดต่อแอดมินเพื่อแก้ไข)"' : '';
-
             // เรียงลำดับเหมือนหน้าเช็คใหม่ เพื่อให้ข้อมูลเดิมแสดงเป็นกลุ่มกีฬาด้วย
             savedRecords.sort((a,b) => {
                 if (isDormRoutine) {
@@ -4600,33 +4650,33 @@
                 const stat = st.status;
                 if(isDutyRoutine) {
                     statusRadios = `
-                        <label class="text-green-600 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="ทำเวร" class="accent-green-600 mr-1" ${stat === 'ทำเวร' ? 'checked' : ''}> ทำเวร</label>
-                        <label class="text-red-500 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="ไม่ทำเวร" class="accent-red-500 mr-1" ${stat === 'ไม่ทำเวร' ? 'checked' : ''}> ไม่ทำเวร</label>
-                        <label class="text-yellow-500 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="att_${st.studentId}" value="ลา" class="accent-yellow-500 mr-1" ${stat === 'ลา' ? 'checked' : ''}> ลา</label>
+                        <label class="text-green-600 cursor-pointer hover:font-bold whitespace-nowrap"><input type="radio" name="att_${st.studentId}" value="ทำเวร" class="accent-green-600 mr-1" ${stat === 'ทำเวร' ? 'checked' : ''}> ทำเวร</label>
+                        <label class="text-red-500 cursor-pointer hover:font-bold whitespace-nowrap"><input type="radio" name="att_${st.studentId}" value="ไม่ทำเวร" class="accent-red-500 mr-1" ${stat === 'ไม่ทำเวร' ? 'checked' : ''}> ไม่ทำเวร</label>
+                        <label class="text-yellow-500 cursor-pointer hover:font-bold whitespace-nowrap"><input type="radio" name="att_${st.studentId}" value="ลา" class="accent-yellow-500 mr-1" ${stat === 'ลา' ? 'checked' : ''}> ลา</label>
                     `;
                 } else if (isDormRoutine) {
                     statusRadios = `
-                        <label class="text-green-600 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="อยู่" class="accent-green-600 mr-1" ${stat === 'อยู่' ? 'checked' : ''}> อยู่</label>
-                        <label class="text-red-500 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="ไม่อยู่" class="accent-red-500 mr-1" ${stat === 'ไม่อยู่' ? 'checked' : ''}> ไม่อยู่</label>
-                        <label class="text-yellow-500 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="att_${st.studentId}" value="ลาป่วย" class="accent-yellow-500 mr-1" ${stat === 'ลาป่วย' ? 'checked' : ''}> ลาป่วย</label>
-                        <label class="text-yellow-600 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="att_${st.studentId}" value="ลากิจ" class="accent-yellow-600 mr-1" ${stat === 'ลากิจ' || stat === 'ลากลับบ้าน' ? 'checked' : ''}> ลากิจ</label>
-                        <label class="text-blue-500 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="att_${st.studentId}" value="ลาแข่งขัน" class="accent-blue-500 mr-1" ${stat === 'ลาแข่งขัน' || stat === 'แข่งขันกีฬา' ? 'checked' : ''}> ลาแข่งขัน</label>
+                        <label class="text-green-600 cursor-pointer hover:font-bold whitespace-nowrap"><input type="radio" name="att_${st.studentId}" value="อยู่" class="accent-green-600 mr-1" ${stat === 'อยู่' ? 'checked' : ''}> อยู่</label>
+                        <label class="text-red-500 cursor-pointer hover:font-bold whitespace-nowrap"><input type="radio" name="att_${st.studentId}" value="ไม่อยู่" class="accent-red-500 mr-1" ${stat === 'ไม่อยู่' ? 'checked' : ''}> ไม่อยู่</label>
+                        <label class="text-yellow-500 cursor-pointer hover:font-bold whitespace-nowrap"><input type="radio" name="att_${st.studentId}" value="ลาป่วย" class="accent-yellow-500 mr-1" ${stat === 'ลาป่วย' ? 'checked' : ''}> ลาป่วย</label>
+                        <label class="text-yellow-600 cursor-pointer hover:font-bold whitespace-nowrap"><input type="radio" name="att_${st.studentId}" value="ลากิจ" class="accent-yellow-600 mr-1" ${stat === 'ลากิจ' || stat === 'ลากลับบ้าน' ? 'checked' : ''}> ลากิจ</label>
+                        <label class="text-blue-500 cursor-pointer hover:font-bold whitespace-nowrap"><input type="radio" name="att_${st.studentId}" value="ลาแข่งขัน" class="accent-blue-500 mr-1" ${stat === 'ลาแข่งขัน' || stat === 'แข่งขันกีฬา' ? 'checked' : ''}> ลาแข่งขัน</label>
                     `;
                 } else if (isFlagRoutine) {
                     statusRadios = `
-                        <label class="text-green-600 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="มา" class="accent-green-600 mr-1" ${stat === 'มา' ? 'checked' : ''}> มา</label>
-                        <label class="text-red-500 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="ขาด" class="accent-red-500 mr-1" ${stat === 'ขาด' ? 'checked' : ''}> ขาด</label>
-                        <label class="text-yellow-600 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="สาย" class="accent-yellow-600 mr-1" ${stat === 'สาย' ? 'checked' : ''}> สาย</label>
-                        <label class="text-yellow-500 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="att_${st.studentId}" value="ลาป่วย" class="accent-yellow-500 mr-1" ${stat === 'ลาป่วย' ? 'checked' : ''}> ลาป่วย</label>
-                        <label class="text-yellow-600 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="att_${st.studentId}" value="ลากิจ" class="accent-yellow-600 mr-1" ${stat === 'ลากิจ' || stat === 'ลากลับบ้าน' ? 'checked' : ''}> ลากิจ</label>
-                        <label class="text-blue-500 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="att_${st.studentId}" value="ลาแข่งขัน" class="accent-blue-500 mr-1" ${stat === 'ลาแข่งขัน' || stat === 'แข่งขันกีฬา' ? 'checked' : ''}> ลาแข่งขัน</label>
+                        <label class="text-green-600 cursor-pointer hover:font-bold whitespace-nowrap"><input type="radio" name="att_${st.studentId}" value="มา" class="accent-green-600 mr-1" ${stat === 'มา' ? 'checked' : ''}> มา</label>
+                        <label class="text-red-500 cursor-pointer hover:font-bold whitespace-nowrap"><input type="radio" name="att_${st.studentId}" value="ขาด" class="accent-red-500 mr-1" ${stat === 'ขาด' ? 'checked' : ''}> ขาด</label>
+                        <label class="text-yellow-600 cursor-pointer hover:font-bold whitespace-nowrap"><input type="radio" name="att_${st.studentId}" value="สาย" class="accent-yellow-600 mr-1" ${stat === 'สาย' ? 'checked' : ''}> สาย</label>
+                        <label class="text-yellow-500 cursor-pointer hover:font-bold whitespace-nowrap"><input type="radio" name="att_${st.studentId}" value="ลาป่วย" class="accent-yellow-500 mr-1" ${stat === 'ลาป่วย' ? 'checked' : ''}> ลาป่วย</label>
+                        <label class="text-yellow-600 cursor-pointer hover:font-bold whitespace-nowrap"><input type="radio" name="att_${st.studentId}" value="ลากิจ" class="accent-yellow-600 mr-1" ${stat === 'ลากิจ' || stat === 'ลากลับบ้าน' ? 'checked' : ''}> ลากิจ</label>
+                        <label class="text-blue-500 cursor-pointer hover:font-bold whitespace-nowrap"><input type="radio" name="att_${st.studentId}" value="ลาแข่งขัน" class="accent-blue-500 mr-1" ${stat === 'ลาแข่งขัน' || stat === 'แข่งขันกีฬา' ? 'checked' : ''}> ลาแข่งขัน</label>
                     `;
                 } else {
                     statusRadios = `
-                        <label class="text-green-600 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="อยู่" class="accent-green-600 mr-1" ${stat === 'อยู่' ? 'checked' : ''}> อยู่</label>
-                        <label class="text-red-500 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="ไม่อยู่" class="accent-red-500 mr-1" ${stat === 'ไม่อยู่' ? 'checked' : ''}> ไม่อยู่</label>
-                        <label class="text-yellow-500 ${leaveLockClass}" ${leaveTitle}><input type="radio" name="att_${st.studentId}" value="ลา" class="accent-yellow-500 mr-1" ${stat === 'ลา' ? 'checked' : ''}> ลา</label>
-                        <label class="text-purple-600 cursor-pointer hover:font-bold"><input type="radio" name="att_${st.studentId}" value="หนี" class="accent-purple-600 mr-1" ${stat === 'หนี' ? 'checked' : ''}> หนี</label>
+                        <label class="text-green-600 cursor-pointer hover:font-bold whitespace-nowrap"><input type="radio" name="att_${st.studentId}" value="อยู่" class="accent-green-600 mr-1" ${stat === 'อยู่' ? 'checked' : ''}> อยู่</label>
+                        <label class="text-red-500 cursor-pointer hover:font-bold whitespace-nowrap"><input type="radio" name="att_${st.studentId}" value="ไม่อยู่" class="accent-red-500 mr-1" ${stat === 'ไม่อยู่' ? 'checked' : ''}> ไม่อยู่</label>
+                        <label class="text-yellow-500 cursor-pointer hover:font-bold whitespace-nowrap"><input type="radio" name="att_${st.studentId}" value="ลา" class="accent-yellow-500 mr-1" ${stat === 'ลา' ? 'checked' : ''}> ลา</label>
+                        <label class="text-purple-600 cursor-pointer hover:font-bold whitespace-nowrap"><input type="radio" name="att_${st.studentId}" value="หนี" class="accent-purple-600 mr-1" ${stat === 'หนี' ? 'checked' : ''}> หนี</label>
                     `;
                 }
 
@@ -4634,13 +4684,13 @@
                 const sportDisplay = isDormRoutine ? `<span class="text-rsct-red font-bold bg-red-50 px-2 py-1 rounded border border-red-100">${st.sport || '-'}</span>` : (st.sport || '-');
 
                 tbody.innerHTML += `
-                    <tr class="border-b hover:bg-gray-50 bg-yellow-50">
-                        <td class="p-3 text-center text-gray-500">${idx + 1}</td>
-                        <td class="p-3 font-semibold text-blue-800">${st.studentId || '-'}</td>
-                        <td class="p-3">${st.fullName || '-'}</td>
+                    <tr class="border-b hover:bg-gray-50 bg-yellow-50 group">
+                        <td class="p-3 text-center text-gray-500 sticky left-0 bg-yellow-50 group-hover:bg-gray-50 z-10 border-r border-yellow-100">${idx + 1}</td>
+                        <td class="p-3 font-semibold text-blue-800 sticky left-[64px] bg-yellow-50 group-hover:bg-gray-50 z-10 border-r border-yellow-100">${st.studentId || '-'}</td>
+                        <td class="p-3 sticky left-[160px] bg-yellow-50 group-hover:bg-gray-50 z-10 border-r border-yellow-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">${st.fullName || '-'}</td>
                         <td class="p-3 text-gray-600">${st.room || '-'}</td>
                         <td class="p-3 text-xs whitespace-nowrap">${sportDisplay}</td>
-                        <td class="p-3 text-center"><div class="flex justify-center gap-3">${statusRadios}</div></td>
+                        <td class="p-3 text-center"><div class="flex justify-start md:justify-center gap-3 overflow-x-auto pb-1 custom-scrollbar min-w-[200px]">${statusRadios}</div></td>
                     </tr>
                 `;
             });
@@ -4683,6 +4733,8 @@
             const isUpdateFlag = isUpdateInput ? isUpdateInput.value : 'false';
             
             const records = [];
+            const leavesToCreateByType = {}; // เก็บข้อมูลลาเพื่ออัปเดต
+
             formData.forEach((value, key) => {
                 if(key.startsWith('att_')) {
                     const sId = key.replace('att_', '');
@@ -4703,12 +4755,25 @@
                     }
 
                     records.push({ studentId: sId, fullName: stFullName, room: stRoom, sport: stSport, status: value });
+
+                    // หากครูติ๊กเลือกสถานะเกี่ยวกับการลา ให้เตรียมข้อมูลส่งไปบันทึกในหน้าแจ้งลา
+                    if (['ลาป่วย', 'ลากิจ', 'ลากลับบ้าน', 'ลาแข่งขัน', 'แข่งขันกีฬา', 'ลา'].includes(value)) {
+                        let leaveType = value;
+                        if (value === 'ลาแข่งขัน' || value === 'แข่งขันกีฬา') leaveType = 'แข่งขันกีฬา';
+                        if (value === 'ลากลับบ้าน' || value === 'ลา') leaveType = 'ลากิจ'; // Map เข้ากับประเภทการลามาตรฐาน
+
+                        // ตรวจสอบว่ามีการลานี้ในวันดังกล่าวแล้วหรือยัง (ป้องกันซ้ำซ้อน)
+                        const existingLeave = getStudentLeaveType(sId, routineDate);
+                        if (!existingLeave) {
+                            if (!leavesToCreateByType[leaveType]) leavesToCreateByType[leaveType] = [];
+                            leavesToCreateByType[leaveType].push(`${sId} - ${stFullName}`);
+                        }
+                    }
                 }
             });
 
             if(records.length === 0) return showToast("ไม่มีข้อมูลนักเรียนให้บันทึก", "error");
 
-            // ส่งข้อมูลชื่อครูและตำแหน่งเพื่อใช้ในการตรวจสอบ Time Lock ที่หลังบ้านด้วย
             const payloadObj = {
                 routineName: routineName,
                 routineDate: routineDate,
@@ -4720,23 +4785,61 @@
 
             sendPOST('saveRoutineCheck', { payload: JSON.stringify(payloadObj) }, function(res) {
                 if(res.status === 'success') {
-                    showToast(isUpdateFlag === 'true' ? "อัปเดตข้อมูลเดิมสำเร็จ!" : "บันทึกการเช็คชื่อกิจวัตรสำเร็จ!", "success");
+                    // --- ทำการบันทึกข้อมูลการลา (Sync) โดยเรียกใช้งาน API ของหน้าแจ้งลาโดยตรง ---
+                    const types = Object.keys(leavesToCreateByType);
+                    if (types.length > 0) {
+                        const formatDateToBuddhist = (isoDateString) => {
+                            if(!isoDateString) return "";
+                            const d = new Date(isoDateString);
+                            if (isNaN(d.getTime())) return isoDateString;
+                            return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear() + 543}`;
+                        };
+                        const todayIso = new Date().toISOString().split('T')[0];
+
+                        types.forEach(type => {
+                            const leavePayload = {
+                                l_date: todayIso,
+                                l_recorder: currentUserName,
+                                recorderName: currentUserName,
+                                l_student: leavesToCreateByType[type].join(', '),
+                                l_type: type,
+                                l_start_date: routineDate,
+                                l_end_date: routineDate,
+                                l_days: 1,
+                                l_date_be: formatDateToBuddhist(todayIso),
+                                l_start_date_be: formatDateToBuddhist(routineDate),
+                                l_end_date_be: formatDateToBuddhist(routineDate)
+                            };
+                            // บันทึกลงระบบแจ้งลาทันที
+                            sendPOST('saveLeave', { payload: JSON.stringify(leavePayload) }, function(lRes) {
+                                if (lRes.status === 'success') {
+                                    masterLeaveData = [];
+                                    fetchAllLeaves(); // โหลดข้อมูลลาใหม่ให้เป็นปัจจุบันให้เห็นในหน้าแจ้งลาทันที
+                                }
+                            });
+                        });
+                    }
+                    // ----------------------------------------------------
+
+                    showToast(isUpdateFlag === 'true' ? "อัปเดตข้อมูลเดิมสำเร็จ!" : "บันทึกการเช็คชื่อสำเร็จ พร้อมลงบันทึกการลาอัตโนมัติเรียบร้อย!", "success");
                     document.getElementById('routineCheckTableBody').innerHTML = `<tr><td colspan="6" class="p-8 text-center text-gray-400"><i class="fas fa-check-circle text-2xl mb-2 text-green-500 block"></i> บันทึกข้อมูลเรียบร้อยแล้ว<br>กรุณาเลือกกิจวัตรและวันที่อื่นเพื่อทำรายการต่อ</td></tr>`;
                     if(isUpdateInput) isUpdateInput.value = 'false';
                     
                     const btnSave = document.getElementById('btnSaveRoutineCheck');
                     if(btnSave) {
                         btnSave.innerHTML = '<i class="fas fa-save mr-2"></i> บันทึกข้อมูลการเช็คชื่อ';
-                        btnSave.classList.add('hidden'); // ซ่อนปุ่มบันทึกหลังจากเซฟเสร็จ
+                        btnSave.classList.add('hidden');
                     }
                     
-                    // บันทึกสถานะการเช็คชื่อของวันนั้นลง LocalStorage (อ้างอิงชื่อครู, วันที่, กิจวัตร)
                     const saveKey = `rsct_saved_routine_${currentUserName}_${routineDate}_${routineName}`;
                     localStorage.setItem(saveKey, 'true');
 
-                    // ซ่อนปุ่มดึงรายชื่อ (เช็คใหม่) ทันทีหลังจากบันทึกเสร็จ เพื่อป้องกันการกดดึงรายชื่อทับซ้อน
                     const btnLoad = document.querySelector('button[onclick="loadStudentsForRoutineCheck()"]');
                     if(btnLoad) { btnLoad.classList.add('hidden'); }
+
+                    // รีโหลดข้อมูลการลาส่วนกลางให้เป็นเวอร์ชันล่าสุด
+                    masterLeaveData = [];
+                    fetchAllLeaves();
                 } else {
                     showToast("เกิดข้อผิดพลาด: " + (res.message || "การเชื่อมต่อล้มเหลว"), "error");
                 }
@@ -6560,7 +6663,7 @@
             const tbody = document.querySelector('#leaveHistoryTable tbody');
             const thAction = document.getElementById('th_leave_action');
             const showActionCol = (currentUserRole === 'ผู้บริหาร' || currentUserRole === 'ผู้ดูแลระบบ');
-            const colSpanCount = showActionCol ? 9 : 8;
+            const colSpanCount = showActionCol ? 8 : 7; // ปรับลดจำนวนคอลัมน์เนื่องจากลบช่อง "สาเหตุ" ออก
 
             if (thAction) {
                 thAction.style.display = showActionCol ? '' : 'none';
@@ -6722,7 +6825,6 @@
                                     </td>
                                     <td class="p-3 text-center border-r"><span class="px-2 py-1 rounded text-xs font-bold border ${typeStyle}">${item.type || '-'}</span></td>
                                     <td class="p-3 text-center font-bold text-rsct-red border-r">${item.totalDays || '-'}</td>
-                                    <td class="p-3 text-gray-600 max-w-[200px] truncate border-r" title="${item.reason || ''}">${item.reason || '-'}</td>
                                     <td class="p-3 text-center border-r text-gray-700 text-xs">${recorderDisplay}</td>
                                     <td class="p-3 text-center border-r">${statusBadge}</td>
                                     ${actionTdHtml}
